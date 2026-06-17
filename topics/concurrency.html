@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>异步并发 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="concurrency">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>⚡ 异步并发</h1>
+        <p class="subtitle">含实战场景 · 10 题 · 精练 6 项 · 与 <a href="promise.html">Promise</a> / <a href="eventloop.html">事件循环</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题 · all/race 语义见 Promise Q12</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 串行 / 并行 / 限流怎么选</li>
+          <li><a href="#q2">Q2</a> 批量请求失败策略选型</li>
+          <li><a href="#q3">Q3</a> Promise.all 失败 + 取消多余请求</li>
+          <li><a href="#q5">Q5</a> 手写 runPool 限流（最高频）</li>
+          <li><a href="#q7">Q7</a> 接口失败重试 retry</li>
+          <li><a href="#q9">Q9</a> AbortController 取消请求</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、选型 ── -->
+      <section class="section">
+        <h2 class="section-title">一、串行 · 并行 · 限流怎么选</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 三种执行策略分别适合什么场景？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>相册页用户选了 <strong>100 张</strong> 图片要上传，后端限流「单用户最多同时 3 个连接」。你会怎么设计？和「一张一张传」「100 个一起传」有何区别？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>策略</th><th>写法思路</th><th>耗时</th><th>典型场景</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>串行</strong></td>
+                    <td><code>for (const t of tasks) await t()</code></td>
+                    <td>累加（100×单次）</td>
+                    <td>有严格顺序依赖、写后读</td>
+                  </tr>
+                  <tr>
+                    <td><strong>全并行</strong></td>
+                    <td><code>Promise.all(tasks.map(t =&gt; t()))</code></td>
+                    <td>≈最慢那个</td>
+                    <td>少量独立请求、无服务端限流</td>
+                  </tr>
+                  <tr>
+                    <td><strong>限流并发</strong></td>
+                    <td><code>runPool(tasks, 3)</code></td>
+                    <td>介于两者之间</td>
+                    <td>批量上传、爬虫、分页拉取</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>上面场景答案：</strong>用<strong>限流并发 3</strong>——既比串行快，又不会触发 429 / 浏览器连接数打满。</p>
+              <p><strong>面试口诀：</strong>要顺序 → 串行；要最快且量小 → all；量大要控节奏 → 线程池 / runPool。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 批量拉 10 个详情，允许部分失败怎么写？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              列表页拿到 10 个 id，要并行拉详情渲染卡片。其中 1 个 id 已删除会 404——
+              你希望<strong>其它 9 个仍展示</strong>，而不是整页报错白屏。用 <code>all</code> 还是 <code>allSettled</code>？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>选 <code>Promise.allSettled</code></strong>（或每个请求单独 catch 后返回 null）。</p>
+              <pre><code>const ids = [1, 2, 3 /* ... */];
+
+const results = await Promise.allSettled(
+  ids.map((id) =&gt; fetch(`/api/item/${id}`).then((r) =&gt; r.json()))
+);
+
+const items = results
+  .filter((r) =&gt; r.status === 'fulfilled')
+  .map((r) =&gt; r.value);
+
+const failed = results.filter((r) =&gt; r.status === 'rejected');
+// 可对 failed 打日志或展示占位</code></pre>
+              <table>
+                <thead>
+                  <tr><th>API</th><th>一个失败时</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>Promise.all</code></td><td>立刻 reject，适合「全部成功才算成功」</td></tr>
+                  <tr><td><code>Promise.allSettled</code></td><td>等全部结束，逐项看 status</td></tr>
+                  <tr><td><code>Promise.any</code></td><td>任一成功即成功（竞速/备用源）</td></tr>
+                </tbody>
+              </table>
+              <p>静态方法细节见 <a href="promise.html#q12">Promise Q12</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、Promise.all 的坑 ── -->
+      <section class="section">
+        <h2 class="section-title">二、Promise.all 的坑</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · all 里一个失败，其它请求还在跑——怎么办？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              下单页要同时校验库存、优惠券、地址三个接口，用 <code>Promise.all</code>。
+              库存接口先返回「无货」——你希望<strong>立刻取消</strong>另外两个还在飞的请求，避免无效计算和用户多等。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>坑：</strong><code>Promise.all</code>  reject 后<strong>不会自动 abort</strong> 其它 fetch，它们仍会跑完（浪费带宽）。</p>
+              <p><strong>解法：</strong>统一 <code>AbortController</code>，任一失败时 <code>abort()</code>：</p>
+              <pre><code>async function validateCheckout() {
+  const controller = new AbortController();
+  const { signal } = controller;
+
+  const tasks = [
+    fetch('/api/stock', { signal }),
+    fetch('/api/coupon', { signal }),
+    fetch('/api/address', { signal }),
+  ];
+
+  try {
+    return await Promise.all(tasks);
+  } catch (e) {
+    controller.abort(); // 取消其余进行中的请求
+    throw e;
+  }
+}</code></pre>
+              <p><strong>面试答法：</strong>「all 只负责聚合结果，不负责取消；生产上要自己用 AbortController 或标志位。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q4 · forEach 里写 async 为什么不会「等全部完成」？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>const ids = [1, 2, 3];
+
+ids.forEach(async (id) =&gt; {
+  await saveItem(id);
+});
+console.log('全部保存完成'); // 实际会先打印这行</code></pre>
+            <p>保存草稿时踩坑：以为 forEach + await 会串行等完，结果提前提示「保存成功」。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong><code>forEach</code> 不会等待 async 回调；它同步触发 3 个 async 函数后立即继续，<code>console.log</code> 先执行。</p>
+              <p><strong>正确写法：</strong></p>
+              <pre><code>// 并行等全部
+await Promise.all(ids.map((id) =&gt; saveItem(id)));
+
+// 串行
+for (const id of ids) {
+  await saveItem(id);
+}</code></pre>
+              <p><strong>同类坑：</strong><code>map</code> 不 await 也会 fire-and-forget；<code>reduce</code> 链可实现串行（选练）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、手写限流 ── -->
+      <section class="section">
+        <h2 class="section-title">三、手写并发限流（面试最高频）</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 手写 runPool：最多同时 N 个</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              100 张图片上传，<code>tasks[i] = () =&gt; upload(file[i])</code>，
+              要求<strong>最多 3 个同时进行</strong>，全部完成后按原顺序返回结果数组。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>思路：</strong>开 <code>limit</code> 个 worker，共享递增下标 <code>index</code>，谁空闲谁取下一个 task。</p>
+              <pre><code>async function runPool(tasks, limit) {
+  const results = new Array(tasks.length);
+  let index = 0;
+
+  async function worker() {
+    while (index &lt; tasks.length) {
+      const cur = index++;
+      results[cur] = await tasks[cur]();
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(limit, tasks.length) },
+    () =&gt; worker()
+  );
+  await Promise.all(workers);
+  return results;
+}
+
+// 使用
+await runPool(files.map((f) =&gt; () =&gt; upload(f)), 3);</code></pre>
+              <p><strong>口述要点：</strong></p>
+              <ul>
+                <li>任务用<strong>函数数组</strong> <code>() =&gt; Promise</code>，避免一启动就全执行</li>
+                <li><code>index++</code> 在 async 里是原子取用（单线程无竞态）</li>
+                <li>结果按 <code>cur</code> 下标写，保证顺序</li>
+              </ul>
+              <p><strong>复杂度：</strong>约 O(总数) 时间，同时最多 <code>limit</code> 个 in-flight。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · 滑动窗口 vs 线程池写法有何不同？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>面试官追问：「除了 worker 池，能不能用队列 + 执行中计数实现？」——两种思路都要能讲。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>写法 A — worker 池（Q5）：</strong>固定 N 个 worker 循环取任务，最常用、好写。</p>
+              <p><strong>写法 B — 滑动窗口 / 链式：</strong>维护 executing 集合，满了就 <code>Promise.race</code> 等任意一个完成再补：</p>
+              <pre><code>async function poolRace(tasks, limit) {
+  const ret = [];
+  const executing = new Set();
+
+  for (const [i, task] of tasks.entries()) {
+    const p = Promise.resolve().then(() =&gt; task()).then((val) =&gt; {
+      ret[i] = val;
+      executing.delete(p);
+    });
+    executing.add(p);
+    if (executing.size &gt;= limit) {
+      await Promise.race(executing);
+    }
+  }
+  await Promise.all(executing);
+  return ret;
+}</code></pre>
+              <p>面试能讲清 Q5 即可；B 作加分项。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、重试 & 容错 ── -->
+      <section class="section">
+        <h2 class="section-title">四、重试 &amp; 容错</h2>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q7 · 手写 retry：失败重试 3 次</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              支付结果查询接口偶发 502，产品要求：失败后<strong>最多重试 3 次</strong>，
+              每次间隔 500ms，仍失败再提示用户。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function sleep(ms) {
+  return new Promise((r) =&gt; setTimeout(r, ms));
+}
+
+async function retry(fn, times, delay = 0) {
+  let lastError;
+  for (let i = 0; i &lt; times; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      if (i &lt; times - 1 &amp;&amp; delay &gt; 0) {
+        await sleep(delay);
+      }
+    }
+  }
+  throw lastError;
+}
+
+// 使用
+await retry(() =&gt; fetchPaymentStatus(orderId), 3, 500);</code></pre>
+              <p><strong>进阶（口述）：</strong></p>
+              <ul>
+                <li>仅对 5xx / 网络错误重试，4xx 不重试</li>
+                <li>指数退避：500ms → 1s → 2s</li>
+                <li>retry + runPool：每个任务独立 retry</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 限流 + 单任务失败不拖垮整批</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              批量导入 50 条 Excel 行，每行调一次 API，并发限制 5。
+              某一行校验失败不应导致<strong>整批中断</strong>，最后要汇总成功数 / 失败列表。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>async function runPoolSettled(tasks, limit) {
+  const wrapped = tasks.map(
+    (task, i) =&gt; () =&gt;
+      task()
+        .then((value) =&gt; ({ index: i, status: 'fulfilled', value }))
+        .catch((reason) =&gt; ({ index: i, status: 'rejected', reason }))
+  );
+  return runPool(wrapped, limit);
+}
+
+// 使用
+const results = await runPoolSettled(
+  rows.map((row) =&gt; () =&gt; importRow(row)),
+  5
+);
+const ok = results.filter((r) =&gt; r.status === 'fulfilled');
+const bad = results.filter((r) =&gt; r.status === 'rejected');</code></pre>
+              <p><strong>思路：</strong>每个 task 内部 catch 成 fulfilled 结果对象，外层 runPool 不会因单个 reject 而整体失败。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 五、取消 & 超时 ── -->
+      <section class="section">
+        <h2 class="section-title">五、取消 &amp; 超时</h2>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q9 · 切换 Tab 时取消进行中的搜索请求</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用户快速切换「商品 / 店铺 / 用户」三个 Tab，每个 Tab 会发搜索请求。
+              旧 Tab 的慢请求后返回，把新 Tab 的结果<strong>覆盖掉</strong>——怎么防？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>方案 1 — AbortController（推荐）：</strong></p>
+              <pre><code>let controller = null;
+
+async function search(tab, keyword) {
+  controller?.abort();
+  controller = new AbortController();
+
+  const res = await fetch(`/api/search?tab=${tab}&amp;q=${keyword}`, {
+    signal: controller.signal,
+  });
+  return res.json();
+}</code></pre>
+              <p><strong>方案 2 — 请求序号 / 标志位：</strong>每次搜索递增 <code>reqId</code>，响应回来时比对是否仍为最新。</p>
+              <p><strong>React Strict Mode / 组件卸载：</strong>useEffect cleanup 里 <code>abort()</code>，避免 setState on unmounted component。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 接口超时 timeout(promise, ms)</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              第三方地图 API 有时 30s 无响应，产品要求 <strong>5s 内必须给出结果或超时提示</strong>。
+              手写 <code>timeout(promise, ms)</code>。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function sleep(ms) {
+  return new Promise((r) =&gt; setTimeout(r, ms));
+}
+
+function timeout(promise, ms) {
+  return Promise.race([
+    promise,
+    sleep(ms).then(() =&gt; Promise.reject(new Error('timeout'))),
+  ]);
+}
+
+// 使用
+try {
+  const data = await timeout(fetchMap(lat, lng), 5000);
+} catch (e) {
+  if (e.message === 'timeout') showToast('请求超时');
+}</code></pre>
+              <p><strong>注意：</strong><code>race</code> 超时后<strong>原 promise 仍在跑</strong>，和 Q3 一样若需省资源应配合 AbortController。</p>
+              <pre><code>function timeoutSignal(promise, ms, controller) {
+  const timer = setTimeout(() =&gt; controller.abort(), ms);
+  return promise.finally(() =&gt; clearTimeout(timer));
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

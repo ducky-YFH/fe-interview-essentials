@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>原型链 &amp; 继承 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="prototype">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🔗 原型链 &amp; 继承</h1>
+        <p class="subtitle">含实战场景 · 12 题 · 精练 6 项</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 一句话说清原型链（数组为何能 .map）</li>
+          <li><a href="#q2">Q2</a> prototype / __proto__ / constructor</li>
+          <li><a href="#q3">Q3</a> 改 prototype 影响所有实例</li>
+          <li><a href="#q5">Q5</a> new 做了什么 + 手写 new</li>
+          <li><a href="#q6">Q6</a> instanceof 原理 + 手写</li>
+          <li><a href="#q7">Q7</a> 继承方式对比 + 项目选型</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、基础概念 ── -->
+      <section class="section">
+        <h2 class="section-title">一、基础概念</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 什么是原型链？用一句话解释</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              业务里写 <code>const list = [1, 2, 3]; list.map(x =&gt; x * 2)</code>，
+              但 <code>map</code> 明明定义在 <code>Array.prototype</code> 上，
+              普通数组实例上并没有 <code>map</code> 方法——为什么能直接调用？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>
+                <strong>原型链</strong>：访问对象属性时，若自身没有，就沿
+                <code>[[Prototype]]</code>（即 <code>__proto__</code>）向上查找，
+                直到 <code>Object.prototype</code>，再往上是 <code>null</code>，这条链就是原型链。
+              </p>
+              <p><strong>上面场景：</strong></p>
+              <ol>
+                <li><code>list</code> 自身没有 <code>map</code></li>
+                <li>沿原型找到 <code>Array.prototype.map</code></li>
+                <li>以 <code>list</code> 为 <code>this</code> 执行</li>
+              </ol>
+              <p><strong>面试口述：</strong></p>
+              <p>
+                「JS 用原型实现继承和方法共享。实例找不到属性时，就顺着原型链往上找，
+                所以数组能直接用 Array 上的方法。」
+              </p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · prototype、__proto__、constructor 什么关系？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              DevTools 里展开一个对象，看到 <code>[[Prototype]]</code>；
+              控制台输入 <code>obj.__proto__ === Obj.prototype</code> 为 true。
+              面试常问三者怎么串起来——请画/说清关系。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function Person(name) {
+  this.name = name;
+}
+const p = new Person('Tom');</code></pre>
+              <table>
+                <thead>
+                  <tr><th>谁</th><th>是什么</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>Person.prototype</code></td>
+                    <td>构造函数上的「原型对象」，实例共享的方法放这里</td>
+                  </tr>
+                  <tr>
+                    <td><code>p.__proto__</code></td>
+                    <td>实例指向原型的链接（标准名 <code>[[Prototype]]</code>）</td>
+                  </tr>
+                  <tr>
+                    <td><code>Person.prototype.constructor</code></td>
+                    <td>指回 <code>Person</code> 函数本身</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>核心等式（必背）：</strong></p>
+              <pre>p.__proto__ === Person.prototype
+Person.prototype.constructor === Person</pre>
+              <p>
+                <strong>记忆：</strong><code>prototype</code> 是函数才有的属性；
+                <code>__proto__</code> 是实例才有的链接。箭头函数没有 <code>prototype</code>，不能 <code>new</code>。
+              </p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、查找 & 输出 ── -->
+      <section class="section">
+        <h2 class="section-title">二、属性查找 &amp; 输出题</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 改 prototype 会影响所有实例吗？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              后台管理系统里用构造函数创建多个 Tab 页实例，方法挂在
+              <code>Tab.prototype.close</code> 上。上线后要给所有 Tab 加一个
+              <code>refresh</code> 方法——直接改 <code>Tab.prototype</code> 行不行？
+            </p>
+          </div>
+          <pre><code data-runnable>function Tab(title) {
+  this.title = title;
+}
+Tab.prototype.close = function () {
+  console.log('close', this.title);
+};
+
+const a = new Tab('首页');
+const b = new Tab('设置');
+
+Tab.prototype.refresh = function () {
+  console.log('refresh', this.title);
+};
+
+a.close();
+a.refresh();
+b.refresh();</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong></p>
+              <pre>close 首页
+refresh 首页
+refresh 设置</pre>
+              <p>
+                <strong>原因：</strong><code>a</code>、<code>b</code> 的
+                <code>__proto__</code> 都指向同一个 <code>Tab.prototype</code>。
+                事后给 prototype 加方法，已有实例也能用——这就是「方法共享」的好处。
+              </p>
+              <p><strong>项目注意：</strong>改 prototype 影响所有实例；若只想改某一个，应写在实例自身上（属性遮蔽）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q4 · 属性遮蔽（shadowing）输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用户模型 <code>User</code> 在 prototype 上有默认 <code>role: 'guest'</code>。
+              某个 VIP 用户实例上单独设置了 <code>role = 'vip'</code>，读属性时走哪一层？
+            </p>
+          </div>
+          <pre><code data-runnable>function User(name) {
+  this.name = name;
+}
+User.prototype.role = 'guest';
+
+const u1 = new User('Alice');
+const u2 = new User('Bob');
+u2.role = 'vip';
+
+console.log(u1.role);
+console.log(u2.role);
+delete u2.role;
+console.log(u2.role);</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong></p>
+              <pre>guest
+vip
+guest</pre>
+              <p><strong>查找顺序：</strong>先找自身 → 再找原型链。</p>
+              <ul>
+                <li><code>u1</code> 自身无 <code>role</code> → 找到 prototype 的 <code>guest</code></li>
+                <li><code>u2.role = 'vip'</code> 在实例上遮蔽了原型属性</li>
+                <li><code>delete u2.role</code> 删掉实例属性后，又能看到 prototype 的 <code>guest</code></li>
+              </ul>
+              <p><strong>面试点：</strong>改 <code>obj.prop</code> 默认只改实例；要改共享默认值应改 <code>Constructor.prototype.prop</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、new & instanceof ── -->
+      <section class="section">
+        <h2 class="section-title">三、new &amp; instanceof</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · new 做了什么？手写 myNew</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              封装业务实体 <code>new Order(id)</code>，内部要初始化实例属性、
+              绑定原型方法、且当构造函数 return 对象时以 return 为准。
+              说出 <code>new</code> 四步，并手写简化版。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>new Fn() 四步：</strong></p>
+              <ol>
+                <li>创建空对象，其 <code>[[Prototype]]</code> 指向 <code>Fn.prototype</code></li>
+                <li>以该对象为 <code>this</code> 执行构造函数</li>
+                <li>若构造函数 return 了<strong>对象</strong>，则返回该对象</li>
+                <li>否则返回步骤 1 创建的对象</li>
+              </ol>
+              <pre><code>function myNew(Fn, ...args) {
+  const obj = Object.create(Fn.prototype);
+  const result = Fn.apply(obj, args);
+  return result !== null &amp;&amp; (typeof result === 'object' || typeof result === 'function')
+    ? result
+    : obj;
+}</code></pre>
+              <p><strong>项目场景：</strong>ORM 实体、自定义 Error、工厂类实例化，底层都是这套机制。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · instanceof 原理 + 手写</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              API 返回可能是数组或 NodeList，要写工具函数区分「真数组」和类数组；
+              又要判断 <code>err instanceof ApiError</code> 是否为自定义业务错误。
+              <code>instanceof</code> 底层怎么判？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>
+                <strong>原理：</strong>沿实例的 <code>__proto__</code> 链查找，
+                看是否出现过 <code>Constructor.prototype</code>。
+              </p>
+              <pre><code>function myInstanceof(obj, Constructor) {
+  if (obj === null || (typeof obj !== 'object' &amp;&amp; typeof obj !== 'function')) {
+    return false;
+  }
+  let proto = Object.getPrototypeOf(obj);
+  const target = Constructor.prototype;
+  while (proto) {
+    if (proto === target) return true;
+    proto = Object.getPrototypeOf(proto);
+  }
+  return false;
+}</code></pre>
+              <p><strong>局限（面试加分）：</strong></p>
+              <ul>
+                <li>跨 iframe / 多 Realm 时，同名构造函数 prototype 不同 → 可能 false</li>
+                <li>基本类型 <code>'abc' instanceof String</code> 为 false（除非 <code>new String('abc')</code>）</li>
+                <li>改 <code>__proto__</code> 可「欺骗」instanceof（了解即可）</li>
+              </ul>
+              <p><strong>替代：</strong>真数组用 <code>Array.isArray(arr)</code> 更可靠。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、继承方式 ── -->
+      <section class="section">
+        <h2 class="section-title">四、继承方式 &amp; 项目选型</h2>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q7 · 几种继承方式怎么选？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              组件库提供 <code>BaseWidget</code>（含 <code>init</code>、<code>destroy</code>），
+              你要写 <code>DatePicker extends BaseWidget</code>，还要能
+              <code>DatePicker.prototype instanceof BaseWidget</code> 为 true，
+              且 <code>destroy</code> 不能被所有子类实例共享同一份闭包状态。
+              该用哪种继承？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>方式</th><th>问题</th><th>现状</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>原型链继承</td>
+                    <td>引用类型属性被所有实例共享</td>
+                    <td>❌ 不推荐单独用</td>
+                  </tr>
+                  <tr>
+                    <td>构造函数继承</td>
+                    <td>方法无法复用，都在实例上</td>
+                    <td>❌ 不推荐单独用</td>
+                  </tr>
+                  <tr>
+                    <td>组合继承</td>
+                    <td>父类构造函数调两次</td>
+                    <td>⚠️ 了解即可</td>
+                  </tr>
+                  <tr>
+                    <td>寄生组合继承</td>
+                    <td>只调一次父构造，原型链正确</td>
+                    <td>✅ ES5 最佳</td>
+                  </tr>
+                  <tr>
+                    <td>ES6 class extends</td>
+                    <td>语法糖，本质仍是原型链</td>
+                    <td>✅ 现代项目首选</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>上面场景答案：</strong>现代代码直接 <code>class DatePicker extends BaseWidget</code>；ES5 环境用寄生组合。</p>
+              <pre><code>function inherit(Child, Parent) {
+  Child.prototype = Object.create(Parent.prototype);
+  Child.prototype.constructor = Child;
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 寄生组合继承完整写法</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              维护老项目（无 class 语法），要实现
+              <code>Animal → Dog</code>，Dog 有自己的 <code>breed</code>，
+              又能调用 <code>Animal</code> 的 <code>eat</code>。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.eat = function () {
+  console.log(this.name, 'eating');
+};
+
+function Dog(name, breed) {
+  Animal.call(this, name); // 继承实例属性
+  this.breed = breed;
+}
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog;
+Dog.prototype.bark = function () {
+  console.log('wang');
+};
+
+const d = new Dog('Rex', 'husky');
+d.eat();  // Rex eating
+d.bark(); // wang</code></pre>
+              <p><strong>两步记忆：</strong></p>
+              <ol>
+                <li><code>Parent.call(this, ...)</code> — 拷贝父类实例属性</li>
+                <li><code>Child.prototype = Object.create(Parent.prototype)</code> — 链上共享方法</li>
+              </ol>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · Object.create 在项目里怎么用？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              解析 URL query 得到键值对字典 <code>params</code>，要用
+              <code>params.toString</code> 做 key 却意外命中了
+              <code>Object.prototype.toString</code>——怎么创建「干净」的纯字典对象？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>// ❌ 有原型污染风险
+const bad = {};
+bad['toString'] = 'oops'; // 可能和原型方法冲突
+
+// ✅ 无原型对象（纯字典）
+const params = Object.create(null);
+params.foo = 'bar';
+params.toString = 'safe-key'; // 不会碰到 Object.prototype</code></pre>
+              <p><strong>其他场景：</strong></p>
+              <ul>
+                <li><code>myNew</code> 里 <code>Object.create(Fn.prototype)</code></li>
+                <li>以现有对象为模板创建新对象（浅拷贝 + 指定原型）</li>
+                <li>实现继承时替代直接改 <code>prototype</code></li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 五、项目实战 ── -->
+      <section class="section">
+        <h2 class="section-title">五、项目实战</h2>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · jQuery 插件 / Vue mixin 的本质</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              写 jQuery 插件 <code>$.fn.tooltip = function() { ... }</code>，
+              所有 <code>$('div')</code> 都能 <code>.tooltip()</code>。
+              这和原型链什么关系？Vue2 的 <code>mixins: [logMixin]</code> 又是另一种「继承」吗？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>jQuery：</strong></p>
+              <pre><code>// jQuery 实例 arr = [dom1, dom2, ...]
+// arr.__proto__ === $.fn === jQuery.prototype
+$.fn.tooltip = function () { /* this 是每个 jQuery 集合 */ };</code></pre>
+              <p>给 <code>$.fn</code> 挂方法 = 改 <code>jQuery.prototype</code>，所有 jQuery 实例共享。</p>
+              <p><strong>Vue2 mixin：</strong>不是原型链继承，是编译/选项合并——把 data、methods、生命周期钩子合并进组件选项。理解「共享行为」的另一种实现即可。</p>
+              <p><strong>面试答法：</strong>「插件挂 prototype 是典型方法共享；框架 mixin 是选项合并，动机类似，机制不同。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q11 · class 只是语法糖吗？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              TS/Babel 编译后的 <code>class Admin extends User</code> 在 IE11 里长什么样？
+              为什么说 class 没有提升（hoisting）？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>class User {
+  constructor(name) { this.name = name; }
+  sayHi() { console.log(this.name); }
+}
+
+class Admin extends User {
+  constructor(name, role) {
+    super(name);
+    this.role = role;
+  }
+}</code></pre>
+              <p><strong>本质：</strong></p>
+              <ul>
+                <li>方法挂在 <code>User.prototype</code> 上（非 enumerable，与手写不同）</li>
+                <li><code>extends</code> 编译后 ≈ 寄生组合 + <code>super</code> 调用父构造</li>
+                <li>class 声明在 TDZ 内，不能先于声明使用（不像 function 声明会提升）</li>
+              </ul>
+              <p><strong>与箭头函数专题联动：</strong>class 方法若写成箭头函数属性，则挂在实例上、<code>this</code> 词法绑定，适合 React 类组件传回调。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q12 · hasOwnProperty vs in · 遍历对象</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              要把接口 JSON 里所有字段渲染成表单，写
+              <code>for (const key in obj)</code> 却多出了
+              <code>toString</code>、<code>constructor</code> 等键——为什么？怎么只遍历自身字段？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>const user = { id: 1, name: 'Tom' };
+
+// in：自身 + 原型链上 enumerable 的属性
+'id' in user;           // true
+'toString' in user;     // true（来自 Object.prototype）
+
+// hasOwnProperty：仅自身
+user.hasOwnProperty('id');       // true
+user.hasOwnProperty('toString');  // false</code></pre>
+              <p><strong>安全遍历自身属性：</strong></p>
+              <pre><code>Object.keys(user);                        // 推荐
+Object.getOwnPropertyNames(user);
+for (const key of Object.keys(user)) { ... }</code></pre>
+              <p>
+                <strong>现代写法：</strong><code>Object.hasOwn(obj, key)</code> 替代
+                <code>obj.hasOwnProperty(key)</code>，避免 obj 上没有 hasOwnProperty 或被覆盖。
+              </p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>浏览器缓存 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="cache">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>💾 浏览器缓存</h1>
+        <p class="subtitle">含实战场景 · 6 题 · 精练 6 项</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">6 题全是精华，建议全过一遍</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 强缓存 vs 协商缓存</li>
+          <li><a href="#q2">Q2</a> Cache-Control 场景配置</li>
+          <li><a href="#q3">Q3</a> ETag 与 304</li>
+          <li><a href="#q4">Q4</a> 三种刷新行为</li>
+          <li><a href="#q5">Q5</a> 前端构建产物缓存</li>
+          <li><a href="#q6">Q6</a> 不同资源缓存策略</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、两大缓存</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 强缓存 vs 协商缓存</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用户第二次打开淘宝首页，很多图片「秒开」——是没发请求，还是发了请求但返回 304？两种都可能，分别对应哪层缓存？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>强缓存</th>
+                    <th>协商缓存</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>是否发请求</td>
+                    <td>不发（200 from cache）</td>
+                    <td>发请求，服务器决定 304 或 200</td>
+                  </tr>
+                  <tr>
+                    <td>关键响应头</td>
+                    <td>Cache-Control / Expires</td>
+                    <td>ETag / Last-Modified</td>
+                  </tr>
+                  <tr>
+                    <td>场景体感</td>
+                    <td>图片秒开、零网络</td>
+                    <td>Network 里看到 304</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>完整流程：</strong></p>
+              <ol>
+                <li>先看强缓存是否未过期 → 直接用</li>
+                <li>过期 → 带 If-None-Match 请求服务器</li>
+                <li>未变 → 304 用本地副本；变了 → 200 + 新内容</li>
+              </ol>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、Cache-Control</h2>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 各场景 Cache-Control 怎么配？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <ul>
+              <li>A. 打包后的 <code>app.a1b2c3.js</code>（内容变了文件名也变）</li>
+              <li>B. <code>index.html</code>（入口，要能尽快拿到新版本）</li>
+              <li>C. 银行余额接口 <code>GET /api/balance</code></li>
+              <li>D. 用户上传的头像（可能随时换，但同一 URL）</li>
+            </ul>
+          </div>
+          <div class="question">
+            <p>说出这些指令的含义：<code>max-age</code> · <code>no-cache</code> · <code>no-store</code> · <code>public</code> · <code>private</code> · <code>immutable</code></p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>A.</strong> <code>public, max-age=31536000, immutable</code> — 文件名变=内容变，旧文件可永久缓存</li>
+                <li><strong>B.</strong> <code>no-cache</code> — 入口每次向服务器确认有没有新版本（不是 no-store！）</li>
+                <li><strong>C.</strong> <code>no-store</code> — 敏感数据根本不存</li>
+                <li><strong>D.</strong> <code>no-cache + ETag</code> 或 URL 加 <code>?v=169999</code></li>
+              </ul>
+              <p><strong>指令速记：</strong></p>
+              <ul>
+                <li><code>no-cache</code> → 可存，但每次用前必须协商验证</li>
+                <li><code>no-store</code> → 完全不存</li>
+                <li><code>immutable</code> → 配合 hash 文件名，期内绝不重新验证</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">三、协商缓存</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 304 场景</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p><code>logo.png</code> 第一次访问返回 200，响应头：</p>
+            <pre>Cache-Control: max-age=0
+ETag: "abc123"</pre>
+            <p>10 分钟后用户再访问，浏览器会？304 时响应体有内容吗？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li><code>max-age=0</code> → 强缓存视为立即过期</li>
+                <li>浏览器发 GET，带 <code>If-None-Match: "abc123"</code></li>
+                <li>服务器比对 ETag，未变 → <strong>304 Not Modified，无响应体</strong></li>
+                <li>浏览器用本地缓存渲染</li>
+              </ol>
+              <p><strong>ETag vs Last-Modified：</strong>ETag 内容级指纹更精确；有 ETag 优先用 ETag。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">四、刷新行为</h2>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 三种刷新有什么不同？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>你改了 CSS 但用户说「没看到更新」，先问他怎么刷新的？</p>
+          </div>
+          <div class="question">
+            <ul>
+              <li>A. 普通 F5 刷新</li>
+              <li>B. Ctrl+Shift+R 强制刷新</li>
+              <li>C. DevTools 勾选 Disable cache 后刷新</li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>F5：</strong>可能走协商缓存；强缓存未过期的资源仍直接用</li>
+                <li><strong>强刷：</strong>跳过强缓存，带协商头重新验证；仍可能 304</li>
+                <li><strong>Disable cache：</strong>开发调试用，每次都拿最新</li>
+              </ul>
+              <p><strong>排查「没看到更新」：</strong></p>
+              <ol>
+                <li>是否拿到了新 index.html（引用了新 hash 的 JS/CSS？）</li>
+                <li>CDN 是否缓存了旧 index.html</li>
+                <li>是否只改了内容没改 hash</li>
+              </ol>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">五、项目实战</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 前端构建产物怎么配缓存？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Vite/Webpack 打包后：</p>
+            <pre>index.html
+assets/index-a1b2c3.js
+assets/index-d4e5f6.css</pre>
+            <p>为什么 JS/CSS 可以 cache 一年，但改了代码用户仍能拿到新版？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>location /assets/ {
+  add_header Cache-Control "public, max-age=31536000, immutable";
+}
+location = /index.html {
+  add_header Cache-Control "no-cache";
+}</pre>
+              <p><strong>为什么能「缓存一年还能更新」：</strong></p>
+              <ul>
+                <li>内容变 → 构建生成新 hash → index.html 引用新文件名</li>
+                <li>浏览器请求新 URL，旧文件自然淘汰</li>
+                <li>index.html 不长期强缓存，确保能发现新资源名</li>
+              </ul>
+              <p>这是前端缓存<strong>最佳实践</strong>，面试高频。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · HTML / API / 头像分别怎么缓存？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>资源</th><th>策略</th><th>原因</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>hash 静态资源</td>
+                    <td>强缓存 1 年 + immutable</td>
+                    <td>文件名即版本</td>
+                  </tr>
+                  <tr>
+                    <td>index.html</td>
+                    <td>no-cache</td>
+                    <td>入口及时更新</td>
+                  </tr>
+                  <tr>
+                    <td>REST API</td>
+                    <td>no-store 或短时间 no-cache</td>
+                    <td>数据实时/敏感</td>
+                  </tr>
+                  <tr>
+                    <td>头像/配置</td>
+                    <td>ETag 协商 或 URL 加版本号</td>
+                    <td>同 URL 内容变</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>额外了解：</strong>Service Worker（PWA 离线）、DNS 缓存、Memory/Disk Cache。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

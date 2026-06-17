@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>事件循环 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="eventloop">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🔄 事件循环</h1>
+        <p class="subtitle">含实战场景 · 10 题 · 精练 6 项</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题 · 与 Promise 专题互补</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 一句话说清 Event Loop</li>
+          <li><a href="#q2">Q2</a> 宏任务 vs 微任务清单</li>
+          <li><a href="#q3">Q3</a> 经典输出 A E C D B</li>
+          <li><a href="#q4">Q4</a> 嵌套 setTimeout + Promise</li>
+          <li><a href="#q5">Q5</a> async/await 输出顺序</li>
+          <li><a href="#q8">Q8</a> setState 后读 DOM 为何还是旧的</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、基础概念 ── -->
+      <section class="section">
+        <h2 class="section-title">一、基础概念</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · Event Loop 是什么？用一句话解释</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用户点击「提交」后，你写了
+              <code>setTimeout(() =&gt; toast('成功'), 0)</code> 想「尽快」弹提示，
+              却发现页面先卡顿了一下才弹出——为什么 0ms 也不是立刻执行？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>
+                <strong>Event Loop（事件循环）</strong>：JS 单线程，同步代码执行完后，
+                引擎反复「取一个宏任务执行 → 清空微任务队列 →（浏览器可能渲染）→ 再取下一个宏任务」的循环机制。
+              </p>
+              <p><strong>上面场景：</strong></p>
+              <ul>
+                <li><code>setTimeout(fn, 0)</code> 只是把回调放进<strong>宏任务队列</strong>，等当前同步代码和所有微任务跑完才轮到</li>
+                <li>浏览器里 0ms 通常还有最小延迟（嵌套 timer 约 4ms）</li>
+                <li>所以「0」≠ 立即，只是「尽快排进宏任务」</li>
+              </ul>
+              <p><strong>面试口述：</strong></p>
+              <p>
+                「JS 是单线程，异步靠事件循环调度。同步代码先跑完，再处理微任务，
+                再取宏任务，循环往复。」
+              </p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 宏任务和微任务分别有哪些？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              接口返回后同时做了三件事：
+              <code>Promise.then(renderData)</code>、
+              <code>setTimeout(trackLog, 0)</code>、
+              <code>requestAnimationFrame(updateChart)</code>。
+              谁先执行？依据是什么？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>类型</th><th>常见来源</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>微任务</strong></td>
+                    <td>
+                      <code>Promise.then/catch/finally</code>、
+                      <code>queueMicrotask</code>、
+                      <code>MutationObserver</code>、
+                      <code>async/await</code>（await 之后相当于微任务）
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><strong>宏任务</strong></td>
+                    <td>
+                      <code>setTimeout</code> / <code>setInterval</code>、
+                      <code>setImmediate</code>（Node）、
+                      I/O 回调、UI 渲染事件、<code>postMessage</code> 等
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>上面场景大致顺序（浏览器）：</strong></p>
+              <ol>
+                <li>当前同步代码结束</li>
+                <li><strong>微任务</strong>：<code>Promise.then(renderData)</code></li>
+                <li>可能渲染页面</li>
+                <li><strong>宏任务</strong>：<code>setTimeout(trackLog)</code></li>
+                <li><strong>requestAnimationFrame</strong> 在下一帧绘制前，通常在本轮微任务清完之后、与渲染管线相关（面试答「在宏任务之后、绘制前」即可）</li>
+              </ol>
+              <p><strong>铁律：</strong>每执行完一个宏任务，都会<strong>清空当前所有微任务</strong>，再考虑渲染/下一个宏任务。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、经典输出题 ── -->
+      <section class="section">
+        <h2 class="section-title">二、经典输出题</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 入门级输出顺序</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>页面初始化时同时打日志、注册 Promise、设 setTimeout——面试最高频的一题，必须秒答。</p>
+          </div>
+          <pre><code data-runnable>console.log('A');
+
+setTimeout(() =&gt; console.log('B'), 0);
+
+Promise.resolve()
+  .then(() =&gt; console.log('C'))
+  .then(() =&gt; console.log('D'));
+
+console.log('E');</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong><code>A → E → C → D → B</code></p>
+              <ol>
+                <li>同步：<code>A</code>、<code>E</code></li>
+                <li>微任务队列：<code>C</code>，然后 <code>D</code>（第二个 then 在本轮微任务里继续注册并执行）</li>
+                <li>宏任务：<code>B</code></li>
+              </ol>
+              <p><strong>口诀：</strong>同步 → 微任务清空 → 宏任务一个 → 再微任务 → …</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 宏任务里再注册微任务</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              埋点 SDK 用 setTimeout 延迟上报，上报前又用 Promise 整理数据——
+              嵌套异步时顺序容易晕，跑一遍就懂。
+            </p>
+          </div>
+          <pre><code data-runnable>console.log('start');
+
+setTimeout(() =&gt; {
+  console.log('timeout1');
+  Promise.resolve().then(() =&gt; console.log('promise-in-timeout'));
+}, 0);
+
+Promise.resolve()
+  .then(() =&gt; {
+    console.log('promise1');
+    setTimeout(() =&gt; console.log('timeout2'), 0);
+  })
+  .then(() =&gt; console.log('promise2'));
+
+console.log('end');</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong></p>
+              <pre>start → end → promise1 → promise2 → timeout1 → promise-in-timeout → timeout2</pre>
+              <ol>
+                <li>同步：<code>start</code>、<code>end</code></li>
+                <li>微任务：<code>promise1</code>（注册 <code>timeout2</code>）→ <code>promise2</code></li>
+                <li>宏任务 <code>timeout1</code> → 其内部微任务 <code>promise-in-timeout</code></li>
+                <li>宏任务 <code>timeout2</code></li>
+              </ol>
+              <p><strong>关键：</strong>每个宏任务执行完后，都会先把新产生的微任务全部跑完，再取下一个宏任务。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · async/await 输出顺序</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用 async 函数拉取用户信息，await 之后更新 UI 又注册了一个 Promise——
+              和 Promise 专题 Q11 同一类，这里单独再练一遍。
+            </p>
+          </div>
+          <pre><code data-runnable>async function loadUser() {
+  console.log('1');
+  await Promise.resolve();
+  console.log('2');
+  Promise.resolve().then(() =&gt; console.log('3'));
+  console.log('4');
+}
+
+loadUser();
+console.log('5');</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong><code>1 → 5 → 2 → 4 → 3</code></p>
+              <ol>
+                <li>同步：<code>1</code>，遇到 <code>await</code> 暂停，后续代码作为微任务</li>
+                <li>同步继续：<code>5</code></li>
+                <li>微任务（await 续体）：<code>2</code> → 注册 <code>3</code> 的微任务 → <code>4</code></li>
+                <li>同一轮微任务队列下一个：<code>3</code></li>
+              </ol>
+              <p><strong>记忆：</strong><code>await</code> = 把后面的代码包进 <code>.then</code>；await 后面的同步代码仍在<strong>同一个微任务</strong>里顺序执行。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、浏览器 & 项目场景 ── -->
+      <section class="section">
+        <h2 class="section-title">三、浏览器 &amp; 项目场景</h2>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · 微任务连环嵌套输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              链式 <code>.then</code> 里又 <code>return Promise.resolve()</code>，
+              中间层异步调度容易漏题——检验是否真懂「微任务清空」。
+            </p>
+          </div>
+          <pre><code data-runnable>Promise.resolve()
+  .then(() =&gt; {
+    console.log('then1');
+    Promise.resolve().then(() =&gt; console.log('then2'));
+  })
+  .then(() =&gt; console.log('then3'));
+
+console.log('sync');</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong><code>sync → then1 → then2 → then3</code></p>
+              <ul>
+                <li>同步 <code>sync</code></li>
+                <li>第一个 then 执行 <code>then1</code>，内部注册的 <code>then2</code> 进入微任务队列</li>
+                <li>第一个 then 返回 undefined，第二个 then（<code>then3</code>）也进微任务队列</li>
+                <li>清空微任务：<code>then2</code> → <code>then3</code></li>
+              </ul>
+              <p><strong>坑：</strong>以为 <code>then3</code> 一定在 <code>then2</code> 前——错，同一轮里按注册顺序执行。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · requestAnimationFrame 和微任务谁先？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              列表滚动时用 rAF 做虚拟列表重绘，同时在 Promise 里更新了数据——
+              想保证「数据先更新，再绘制」，该怎么排？
+            </p>
+          </div>
+          <pre><code data-runnable>console.log('script');
+
+Promise.resolve().then(() =&gt; console.log('microtask'));
+
+requestAnimationFrame(() =&gt; console.log('rAF'));
+
+console.log('script-end');</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>典型输出：</strong><code>script → script-end → microtask → rAF</code></p>
+              <p><strong>浏览器渲染管线（简化）：</strong></p>
+              <ol>
+                <li>执行 JS（宏任务 / 同步脚本）</li>
+                <li>清空微任务</li>
+                <li>（必要时）样式计算、布局、绘制</li>
+                <li><code>requestAnimationFrame</code> 回调在<strong>下一帧绘制前</strong></li>
+              </ol>
+              <p><strong>项目建议：</strong>数据变更放微任务或同步；DOM 测量/动画放 rAF，避免 layout thrashing。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · setState 后立刻读 DOM 为什么还是旧的？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>function handleClick() {
+  setCount(count + 1);
+  console.log(ref.current.textContent); // 还是旧值？
+  ref.current.textContent = '已更新';    // 和 React 状态不同步
+}</code></pre>
+            <p>Vue / React 里改状态后马上量高度、读 DOM 经常踩坑——和 Event Loop 什么关系？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong></p>
+              <ul>
+                <li><code>setState</code> / <code>setCount</code> 不会同步改 DOM，而是标记更新、批量调度</li>
+                <li>React 18 默认把更新放在微任务/事件结束后的调度里（Automatic Batching）</li>
+                <li>所以同一同步函数里，DOM 往往还没重渲染，读到的是旧值</li>
+              </ul>
+              <p><strong>正确做法：</strong></p>
+              <ul>
+                <li>React：<code>useEffect</code> 依赖 state、<code>flushSync</code>（慎用）、<code>requestAnimationFrame</code> / <code>queueMicrotask</code> 读布局</li>
+                <li>Vue：<code>nextTick(() =&gt; { /* 读 DOM */ })</code> — 本质就是等微任务/DOM 更新后</li>
+              </ul>
+              <p><strong>面试答法：</strong>「状态更新异步调度，DOM 更新在后续微任务/渲染阶段，同步代码里读 DOM 会 stale。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、进阶 & Node ── -->
+      <section class="section">
+        <h2 class="section-title">四、进阶 &amp; Node</h2>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · Node 和浏览器 Event Loop 有何不同？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              同一段代码在浏览器和 Node 里输出顺序可能不同——
+              写 SSR / 工具脚本时为什么要单独了解 Node 的事件循环？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>浏览器：</strong>以渲染为导向，宏任务（task）+ 微任务（microtask）+ rAF + 渲染。</p>
+              <p><strong>Node（libuv）：</strong>分阶段循环，常见阶段：</p>
+              <ol>
+                <li>timers（<code>setTimeout</code> / <code>setInterval</code>）</li>
+                <li>pending callbacks</li>
+                <li>idle, prepare</li>
+                <li>poll（I/O）</li>
+                <li>check（<code>setImmediate</code>）</li>
+                <li>close callbacks</li>
+              </ol>
+              <p>每个阶段之间会清空 <strong>Node 微任务队列</strong>（<code>process.nextTick</code> 优先于 Promise.then）。</p>
+              <p><strong>经典差异题：</strong></p>
+              <pre><code>setTimeout(() =&gt; console.log('timeout'), 0);
+setImmediate(() =&gt; console.log('immediate'));
+// 在主模块顶层：顺序不确定
+// 在 I/O 回调里：通常 immediate 先于 timeout</code></pre>
+              <p><strong>面试答法：</strong>浏览器关心渲染；Node 关心 I/O 阶段，且有 <code>setImmediate</code>、<code>process.nextTick</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 定时器陷阱：嵌套 delay 与「卡死感」</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用 <code>setTimeout(fn, 0)</code> 做任务切片避免长任务阻塞 UI，
+              但连续嵌套 5 层以上反而越来越慢——为什么？和微任务挤占有什么关系？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>浏览器规范：</strong></p>
+              <ul>
+                <li>嵌套层级 &gt; 5 的 timer，最小间隔 clamp 到约 <strong>4ms</strong></li>
+                <li>若微任务队列一直有新任务（死循环 <code>Promise.then</code>），宏任务（含 timer）永远轮不到 → 页面卡死</li>
+              </ul>
+              <pre><code>// ❌ 微任务饥饿：宏任务永远执行不了
+function loop() {
+  Promise.resolve().then(loop);
+}
+loop();
+
+// ✅ 让出主线程用宏任务
+function chunk() {
+  doWork();
+  setTimeout(chunk, 0);
+}</code></pre>
+              <p><strong>项目建议：</strong>大量 Promise 链注意别让微任务无限排队；长计算用 <code>setTimeout</code> / <code>requestIdleCallback</code> / Web Worker 切片。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

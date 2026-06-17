@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TypeScript · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="typescript">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>📘 TypeScript</h1>
+        <p class="subtitle">类型系统 · 36 题 · 精练 10 项</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 类型推断 &amp; as const</li>
+          <li><a href="#q5">Q5</a> interface vs type</li>
+          <li><a href="#q8">Q8</a> 手写 identity / getProperty</li>
+          <li><a href="#q10">Q10</a> 泛型 vs any</li>
+          <li><a href="#q12">Q12</a> 工具类型 Partial / Pick 等</li>
+          <li><a href="#q16">Q16</a> typeof / keyof / 索引访问</li>
+          <li><a href="#q18">Q18</a> 联合类型收窄</li>
+          <li><a href="#q21">Q21</a> any vs unknown</li>
+          <li><a href="#q29">Q29</a> 条件类型 &amp; 分布式</li>
+          <li><a href="#q31">Q31</a> 结构化类型</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、类型推断 & 基础 ── -->
+      <section class="section">
+        <h2 class="section-title">一、类型推断 &amp; 基础</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 下面变量/表达式的类型分别是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>let a = 'hello';
+const b = 'hello';
+let c = [1, 'two'];
+const d = [1, 'two'] as const;</pre>
+          </div>
+          <div class="question">
+            <p>a、b、c、d 的类型分别是什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>a:</strong> <code>string</code></li>
+                <li><strong>b:</strong> <code>'hello'</code>（字面量类型）</li>
+                <li><strong>c:</strong> <code>(string | number)[]</code></li>
+                <li><strong>d:</strong> <code>readonly [1, 'two']</code></li>
+              </ul>
+              <p><strong>原因：</strong></p>
+              <ul>
+                <li><code>let a</code> 允许重新赋值，推断为 <code>string</code>，不会收窄成字面量</li>
+                <li><code>const b</code> 不会重新赋值，收窄为字面量 <code>'hello'</code></li>
+                <li><code>let c</code> 元素类型不固定，推断为可变数组 <code>(string | number)[]</code></li>
+                <li><code>as const</code> 表示深只读 + 字面量，变成固定长度元组，不能 push/pop</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q2 · 哪行会报编译错误？为什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>let x: string = 'hi';
+x = 1;
+
+const arr: readonly number[] = [1, 2, 3];
+arr.push(4);
+
+const obj = { name: 'Tom' as const };
+obj.name = 'Jerry';</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>三行都会报错。</strong></p>
+              <ul>
+                <li><code>x = 1</code> — x 声明为 string，赋 number 违反类型约束</li>
+                <li><code>arr.push(4)</code> — <code>readonly number[]</code> 只读，禁止修改</li>
+                <li><code>obj.name = 'Jerry'</code> — <code>name: 'Tom' as const</code> 锁死为字面量，不能再赋</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q3 · 函数返回值类型是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function fn(flag: boolean) {
+  if (flag) return 1;
+  return 'no';
+}</pre>
+          </div>
+          <div class="question">
+            <p>fn 的返回类型是什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong><code>string | number</code></strong></p>
+              <p>TS 分析所有 return 分支，合并可能返回的类型：</p>
+              <ul>
+                <li>flag 为 true → return 1（number）</li>
+                <li>flag 为 false → return 'no'（string）</li>
+              </ul>
+              <p>所以返回值是 <code>string | number</code>，不是 any。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q4 · 以下赋值哪些合法？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>const n1: number = null;
+const n2: number | null = null;
+const u: undefined = null;
+const v: void = undefined;</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>n1: number = null</code> → ❌ 报错（strictNullChecks 开启时）</li>
+                <li><code>n2: number | null = null</code> → ✅ 合法</li>
+                <li><code>u: undefined = null</code> → ❌ 报错（null 和 undefined 是不同类型）</li>
+                <li><code>v: void = undefined</code> → ✅ 合法</li>
+              </ul>
+              <p><strong>原因：</strong>strictNullChecks 下 null/undefined 不能隐式赋给 number 等普通类型，必须显式写 <code>number | null</code>。void 表示「无有意义返回值」，允许赋 undefined。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、interface vs type ── -->
+      <section class="section">
+        <h2 class="section-title">二、interface vs type</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · interface 和 type 的区别？各举适合场景。</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>能力</th>
+                    <th>interface</th>
+                    <th>type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>声明合并</td>
+                    <td>✅ 可以</td>
+                    <td>❌ 同名会冲突</td>
+                  </tr>
+                  <tr>
+                    <td>联合类型</td>
+                    <td>❌ 不行</td>
+                    <td>✅ string | number</td>
+                  </tr>
+                  <tr>
+                    <td>映射/条件类型</td>
+                    <td>❌ 不行</td>
+                    <td>✅ 工具类型常用</td>
+                  </tr>
+                  <tr>
+                    <td>extends 继承</td>
+                    <td>✅ 直观</td>
+                    <td>✅ 用交叉类型 &amp;</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>场景：</strong></p>
+              <ul>
+                <li>定义 API / 组件 props 对象 → interface</li>
+                <li>联合类型、工具类型、复杂变换 → type</li>
+              </ul>
+              <p>interface 支持同名自动合并（方便扩展第三方库类型）；type 更灵活，能表达联合、交叉、条件、映射等复杂类型。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 下面哪种写法可以声明合并（Declaration Merging）？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>interface UserA { name: string; }
+interface UserA { age: number; }  // 能否合并？
+
+type UserB = { name: string };
+type UserB = { age: number };    // 能否合并？</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>interface UserA { age: number }</code> → ✅ 可以合并，最终 UserA 有 name + age</li>
+                <li><code>type UserB = { age: number }</code> → ❌ 报错：Duplicate identifier 'UserB'</li>
+              </ul>
+              <p><strong>原因：</strong>Declaration Merging 是 interface 专有特性，多个同名 interface 自动合并。type 只是别名，重复声明等于定义两个同名类型，编译器不允许。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q7 · 以下 extends 与 &amp; 等价吗？有何坑？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>interface A7 { id: number; }
+interface B7 { id: string; name: string; }
+type C7 = A7 &amp; B7;  // id 是什么类型？</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong><code>id</code> 的类型是 <code>never</code>。</strong></p>
+              <p>交叉类型 A &amp; B 要求同时满足 A 和 B。A7.id 是 number，B7.id 是 string，一个值不可能既是 number 又是 string，所以 <code>id: number &amp; string = never</code>，整个 C7 基本不可用。</p>
+              <p><strong>extends 不等价于 &amp;：</strong><code>interface C extends A, B</code> 若 id 冲突会直接编译报错，比 &amp; 更早暴露问题。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、泛型 ── -->
+      <section class="section">
+        <h2 class="section-title">三、泛型</h2>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · 手写 identity 和带约束的 getProperty</h3>
+          </div>
+          <div class="question">
+            <p>实现以下两个泛型函数：</p>
+            <pre>function identity&lt;T&gt;(value: T): T { ... }
+function getProperty&lt;T, K extends keyof T&gt;(obj: T, key: K): T[K] { ... }</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>function identity&lt;T&gt;(value: T): T {
+  return value;
+}
+
+function getProperty&lt;T, K extends keyof T&gt;(obj: T, key: K): T[K] {
+  return obj[key];
+}</pre>
+              <p><strong>原因：</strong></p>
+              <ul>
+                <li>identity：T 由传入参数推断，入参和返回值类型一致，比 any 安全</li>
+                <li><code>K extends keyof T</code>：K 只能是 T 的键名，保证 obj[key] 合法；返回 T[K] 表示取 T 上 K 属性对应的类型</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · 下面 T 推断结果是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function wrap&lt;T&gt;(value: T) {
+  return { value };
+}
+const r1 = wrap(42);
+const r2 = wrap('hi');</pre>
+          </div>
+          <div class="question">
+            <p>r1.value 和 r2.value 的类型？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>r1.value:</strong> <code>number</code></li>
+                <li><strong>r2.value:</strong> <code>string</code></li>
+              </ul>
+              <p>wrap(42) 时 T 推断为 number；wrap('hi') 时 T 推断为 string。泛型 T 由实参决定，每个调用点推断独立。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q10 · 为什么需要泛型而不是直接用 any？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>any 会关闭类型检查，失去 TS 意义。</strong></p>
+              <pre>function identityAny(x: any) { return x; }
+const n = identityAny('hello');
+n.foo();  // 不报错，运行时才炸
+
+function identity&lt;T&gt;(x: T): T { return x; }
+const s = identity('hello');
+s.foo();  // ✅ 编译报错：string 上没有 foo</pre>
+              <p>泛型在「保持灵活」的同时「保留具体类型信息」。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q11 · 实现泛型函数 first</h3>
+          </div>
+          <div class="question">
+            <p><code>first([1,2,3])</code> 应返回 <code>number | undefined</code>，怎么写？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>function first&lt;T&gt;(arr: T[]): T | undefined {
+  return arr[0];
+}</pre>
+              <p>空数组时没有第 0 个元素，所以返回 <code>T | undefined</code> 而不是 T。调用 first([1,2,3]) 时 T 推断为 number。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、工具类型 Utility Types ── -->
+      <section class="section">
+        <h2 class="section-title">四、工具类型 Utility Types</h2>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q12 · 以下工具类型结果是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>interface User11 {
+  id: number;
+  name: string;
+  email?: string;
+}</pre>
+          </div>
+          <div class="question">
+            <p>Partial / Required / Pick / Omit / Record 的结果类型？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>Partial&lt;User11&gt;</code> → 所有属性变可选 <code>{ id?: number; name?: string; email?: string }</code></li>
+                <li><code>Required&lt;User11&gt;</code> → 所有属性变必填 <code>{ id: number; name: string; email: string }</code></li>
+                <li><code>Pick&lt;User11, 'id' | 'name'&gt;</code> → <code>{ id: number; name: string }</code></li>
+                <li><code>Omit&lt;User11, 'email'&gt;</code> → <code>{ id: number; name: string }</code></li>
+                <li><code>Record&lt;'a' | 'b', number&gt;</code> → <code>{ a: number; b: number }</code></li>
+              </ul>
+              <p><strong>实现思路：</strong></p>
+              <pre>Partial:  { [K in keyof T]?: T[K] }
+Required: { [K in keyof T]-?: T[K] }
+Pick:     { [K in Keys]: T[K] }
+Omit:     Pick&lt;T, Exclude&lt;keyof T, Keys&gt;&gt;
+Record:   { [K in Keys]: V }</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q13" data-qid="q13">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q13 · ReturnType / Parameters / Exclude / Extract</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function q13_fn(x: number, y: string): boolean {
+  return x &gt; 0;
+}</pre>
+          </div>
+          <div class="question">
+            <p>ReturnType / Parameters / Exclude / Extract 的结果？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>ReturnType&lt;typeof q13_fn&gt;</code> → <code>boolean</code></li>
+                <li><code>Parameters&lt;typeof q13_fn&gt;</code> → <code>[number, string]</code></li>
+                <li><code>Exclude&lt;'a' | 'b' | 'c', 'a'&gt;</code> → <code>'b' | 'c'</code></li>
+                <li><code>Extract&lt;'a' | 'b' | 'c', 'a' | 'x'&gt;</code> → <code>'a'</code></li>
+              </ul>
+              <p>Exclude 从 T 中去掉能赋给 U 的类型；Extract 从 T 中保留能赋给 U 的类型。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q14" data-qid="q14">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q14 · 手写 MyPartial&lt;T&gt; 和 MyPick&lt;T, K&gt;</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>type MyPartial&lt;T&gt; = { [K in keyof T]?: T[K] };
+type MyPick&lt;T, K extends keyof T&gt; = { [P in K]: T[P] };</pre>
+              <p>这是「映射类型」语法：<code>[K in keyof T]</code> 遍历 T 的每个键，右边定义新类型。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q15" data-qid="q15">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q15 · 把 User11 所有属性变成 readonly 且必填，怎么写？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>type R = Required&lt;Readonly&lt;User11&gt;&gt;;
+// { readonly id: number; readonly name: string; readonly email: string }</pre>
+              <p>Readonly 给每个属性加 readonly；Required 把 email? 变成 email 必填。先 Readonly 再 Required 或反过来都可以。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 五、typeof / keyof / 索引访问 ── -->
+      <section class="section">
+        <h2 class="section-title">五、typeof / keyof / 索引访问</h2>
+
+        <article class="card" id="q16" data-qid="q16">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q16 · 下面类型分别是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>const config15 = {
+  host: 'localhost',
+  port: 8080,
+  debug: true,
+} as const;
+
+type Q16_Host = typeof config15.host;
+type Q16_Config = typeof config15;
+type Q16_Keys = keyof typeof config15;
+type Q16_Port = (typeof config15)['port'];</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>typeof config15.host</code> → <code>'localhost'</code>（字面量，因为 as const）</li>
+                <li><code>typeof config15</code> → <code>{ readonly host: 'localhost'; readonly port: 8080; readonly debug: true }</code></li>
+                <li><code>keyof typeof config15</code> → <code>'host' | 'port' | 'debug'</code></li>
+                <li><code>(typeof config15)['port']</code> → <code>8080</code>（字面量类型）</li>
+              </ul>
+              <p><code>typeof</code> 在类型位置表示取值的 TS 类型；<code>keyof</code> 取对象所有键的联合；<code>T['port']</code> 叫索引访问类型。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q17" data-qid="q17">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q17 · 实现 GetValueType&lt;T, K&gt;</h3>
+          </div>
+          <div class="question">
+            <p>取 T[K] 的类型，怎么写？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>type GetValueType&lt;T, K extends keyof T&gt; = T[K];</pre>
+              <p><code>K extends keyof T</code> 保证 K 一定是 T 的合法键，<code>T[K]</code> 是 TS 内置的索引访问语法。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 六、联合类型 & 收窄 ── -->
+      <section class="section">
+        <h2 class="section-title">六、联合类型 &amp; 收窄</h2>
+
+        <article class="card" id="q18" data-qid="q18">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q18 · 以下函数体为何报错？如何改？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function q18_pad(value: string | number, padding: string | number) {
+  if (typeof value === 'string' &amp;&amp; typeof padding === 'string') {
+    return value + padding;
+  }
+  return value + padding; // 报错原因？
+}</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong>+ 运算符要求两边都是 string 或都是 number。value 和 padding 各自是 string | number，但 TS 不会记住「它们在同一分支里被同时收窄」。最后的 return 仍可能是 string + number 或 number + string。</p>
+              <p><strong>改法：</strong></p>
+              <ul>
+                <li>分别处理四种组合</li>
+                <li>或统一转 string：<code>return String(value) + String(padding)</code></li>
+                <li>或统一转 number（若业务允许）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q19" data-qid="q19">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q19 · 判别联合（Discriminated Union）</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>type Shape19 =
+  | { kind: 'circle'; radius: number }
+  | { kind: 'rect'; width: number; height: number };
+
+function area19(s: Shape19): number {
+  switch (s.kind) {
+    case 'circle': return Math.PI * s.radius ** 2;
+    case 'rect':   return s.width * s.height;
+  }
+}</pre>
+          </div>
+          <div class="question">
+            <p>switch (s.kind) 后，TS 如何收窄类型？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>每个成员都有相同的判别字段 kind（字面量类型不同）：</p>
+              <ul>
+                <li><code>case 'circle'</code> → s 有 radius</li>
+                <li><code>case 'rect'</code> → s 有 width, height</li>
+              </ul>
+              <p>这是 TS 做控制流收窄最常用模式之一（Tagged Union）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q20" data-qid="q20">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q20 · user 在 if 块内外类型有何变化？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function q20_narrow(user: string | null) {
+  if (user) {
+    console.log(user.toUpperCase()); // user 此处类型？
+  }
+  // user 此处类型？
+}</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>if (user)</code> 块内 → <code>string</code></li>
+                <li>if 块外 → <code>string | null</code></li>
+              </ul>
+              <p>这叫 Control Flow Analysis（控制流分析）。if (user) 排除了 null 和 undefined（falsy），块内 TS 收窄为 string。出了 if 块，类型恢复为 string | null。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 七、any / unknown / never ── -->
+      <section class="section">
+        <h2 class="section-title">七、any / unknown / never</h2>
+
+        <article class="card" id="q21" data-qid="q21">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q21 · any 和 unknown 区别？下面哪些合法？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function q21_any_unknown(x: unknown) {
+  x.foo();
+  (x as string).toUpperCase();
+  if (typeof x === 'string') x.toUpperCase();
+}</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>x.foo()</code> → ❌ 报错</li>
+                <li><code>(x as string).toUpperCase()</code> → ✅ 编译通过（断言跳过检查，但不安全）</li>
+                <li><code>if (typeof x === 'string') x.toUpperCase()</code> → ✅ 合法</li>
+              </ul>
+              <p><strong>unknown</strong> = 不知道是什么类型，使用前必须先检查。<strong>any</strong> = 放弃检查，啥都能干（不安全）。unknown 强制你先收窄，适合接外部不可信数据。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q22" data-qid="q22">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q22 · never 出现在哪些场景？穷尽检查怎么写？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>type Action22 = { type: 'add'; n: number } | { type: 'reset' };
+
+function reducer22(state: number, action: Action22): number {
+  switch (action.type) {
+    case 'add':   return state + action.n;
+    case 'reset': return 0;
+    default:
+      const _exhaustive: never = action;
+      return _exhaustive;
+  }
+}</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>never 的常见场景：</strong></p>
+              <ol>
+                <li>不可能到达的分支（穷尽检查）</li>
+                <li>总是 throw 的函数（永不返回）</li>
+                <li>空数组 as const [] 的元素类型</li>
+                <li>交叉类型冲突（如 number &amp; string）</li>
+              </ol>
+              <p>若 Action22 新增 <code>{ type: 'mul' }</code> 但 switch 没处理，action 在 default 里类型不是 never，编译报错，提醒你漏了分支。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q23" data-qid="q23">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q23 · 下面函数返回类型为何推断为 never？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function q23_throw(): never {
+  throw new Error('fail');
+}</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>函数体总是 throw，永远不会正常 return。<code>never</code> 表示「不会有任何值返回」，比 void 更准确。调用方若写 <code>const x = q23_throw()</code>，x 的类型是 never（unreachable）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 八、函数重载 & 可选/只读 ── -->
+      <section class="section">
+        <h2 class="section-title">八、函数重载 &amp; 可选/只读</h2>
+
+        <article class="card" id="q24" data-qid="q24">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q24 · 重载签名 vs 实现签名，调用 createDate 时返回类型？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>function createDate(timestamp: number): Date;
+function createDate(year: number, month: number, day: number): Date;
+function createDate(a: number, b?: number, c?: number): Date {
+  if (b !== undefined &amp;&amp; c !== undefined) {
+    return new Date(a, b - 1, c);
+  }
+  return new Date(a);
+}
+
+const d1 = createDate(1700000000000);
+const d2 = createDate(2024, 6, 14);</pre>
+          </div>
+          <div class="question">
+            <p>d1、d2 的类型？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>d1: Date | d2: Date</strong></p>
+              <p>调用者只看到「重载签名」，看不到实现签名。实现签名 <code>createDate(a, b?, c?)</code> 必须兼容所有重载，但对外隐藏。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q25" data-qid="q25">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q25 · ? 和 | undefined 是一回事吗？</h3>
+          </div>
+          <div class="question">
+            <p>interface 里 <code>name?: string</code> 等价于什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><code>name?: string</code> 大致等价于 <code>name: string | undefined</code>（读取时），但在 strictOptionalProperties 开启时有区别：</p>
+              <ul>
+                <li><code>name?: string</code> → 可以「没有 name 这个键」，也可以 name: undefined</li>
+                <li><code>name: string | undefined</code> → 键必须存在，值可以是 undefined</li>
+              </ul>
+              <p>可选属性 ? 表示「可以省略该属性」；显式 | undefined 表示「键要有，值可为空」。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 九、enum & const & 字面量 ── -->
+      <section class="section">
+        <h2 class="section-title">九、enum &amp; const &amp; 字面量</h2>
+
+        <article class="card" id="q26" data-qid="q26">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q26 · enum 和 const 对象 + union 优劣？生产更推荐哪种？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>推荐 as const + union。</strong></p>
+              <p><strong>enum 的问题：</strong></p>
+              <ul>
+                <li>编译后生成额外 JS 对象（数字 enum 还有反向映射），体积更大</li>
+                <li>Tree-shaking 不友好</li>
+                <li>数字 enum 行为不直观（自动递增）</li>
+              </ul>
+              <p><strong>as const + union 的优势：</strong>纯类型层面零开销，值就是普通对象易调试，现代 TS 社区主流做法。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q27" data-qid="q27">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q27 · 下面输出类型/值是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>enum Direction26 { Up, Down, Left, Right; }
+console.log(Direction26.Up, Direction26[0]);</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：0 和 'Up'</strong></p>
+              <p>数字 enum 默认从 0 递增，TS 还会生成反向映射 <code>Direction26[0] === 'Up'</code>。字符串 enum 没有反向映射；const enum 编译内联，运行时可能没有 enum 对象。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 十、进阶 & 手写 ── -->
+      <section class="section">
+        <h2 class="section-title">十、进阶 &amp; 手写</h2>
+
+        <article class="card" id="q28" data-qid="q28">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q28 · 手写 DeepReadonly&lt;T&gt;</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>一层：</strong></p>
+              <pre>type DeepReadonly&lt;T&gt; = { readonly [K in keyof T]: T[K] };</pre>
+              <p><strong>多层（递归）：</strong></p>
+              <pre>type DeepReadonly&lt;T&gt; = {
+  readonly [K in keyof T]: T[K] extends object ? DeepReadonly&lt;T[K]&gt; : T[K];
+};</pre>
+              <p>映射类型遍历所有键，readonly 加只读。递归版对嵌套对象继续展开。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q29" data-qid="q29">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q29 · 条件类型 T extends U ? X : Y — Result 是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>type IsString29&lt;T&gt; = T extends string ? true : false;
+type Result29A = IsString29&lt;string&gt;;
+type Result29B = IsString29&lt;number&gt;;
+type Result29C = IsString29&lt;string | number&gt;;</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>Result29A</code> = <code>true</code></li>
+                <li><code>Result29B</code> = <code>false</code></li>
+                <li><code>Result29C</code> = <code>boolean</code></li>
+              </ul>
+              <p>条件类型在 T 是「裸类型参数」且为联合类型时会「分发」（分布式条件类型）：</p>
+              <pre>IsString29&lt;string | number&gt;
+= IsString29&lt;string&gt; | IsString29&lt;number&gt;
+= true | false
+= boolean</pre>
+              <p>若 T 不是裸类型参数（如 <code>[T] extends [string]</code>），则不会分发。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q30" data-qid="q30">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q30 · 实现 TupleToUnion&lt;T&gt;</h3>
+          </div>
+          <div class="question">
+            <p><code>[string, number]</code> → <code>string | number</code>，怎么写？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>type TupleToUnion&lt;T extends readonly unknown[]&gt; = T[number];</pre>
+              <p><code>T[number]</code> 表示用 number 索引 T 的所有元素类型。对元组 [string, number]，number 索引可能取 0 或 1 位置，所以得到 string | number。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 十一、概念口述题 ── -->
+      <section class="section">
+        <h2 class="section-title">十一、概念口述题</h2>
+
+        <article class="card" id="q31" data-qid="q31">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q31 · TS 的结构化类型（Structural Typing）是什么？</h3>
+          </div>
+          <div class="question">
+            <p>和名义类型（Nominal Typing）有何不同？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>答案：</strong>只要「形状」兼容，就认为类型兼容，不要求显式声明继承关系。</p>
+              <pre>interface Point { x: number; y: number; }
+const p = { x: 1, y: 2, z: 3 };
+fn(p)  // 可以，多余属性 z 不影响</pre>
+              <p>对比 Java/C# 名义类型：必须 implements/extends 才算那个类型。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q32" data-qid="q32">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q32 · strictNullChecks 打开前后有何变化？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>关闭：</strong>null/undefined 可以赋给几乎所有类型（历史行为，易出 bug）</li>
+                <li><strong>开启：</strong>必须显式 <code>number | null</code>，调用前需判空</li>
+              </ul>
+              <p>严格空值检查是 TS 减少「运行时 null 报错」最有效的选项之一。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q33" data-qid="q33">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q33 · declare / .d.ts 文件作用？什么场景需要？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>作用：</strong>只声明类型，不写实现。告诉 TS「运行时存在这个变量/模块，形状是这样」。</p>
+              <p><strong>场景：</strong></p>
+              <ul>
+                <li>给无类型的 JS 库写类型（@types/xxx）</li>
+                <li>全局变量如 <code>window.__APP_CONFIG__</code></li>
+                <li>模块 shims（*.vue, *.css）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q34" data-qid="q34">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q34 · type 和 interface 在 extends 交叉类型时，同名属性冲突会怎样？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>interface A { id: number; }
+interface B { id: string; }
+interface C extends A, B {}  // 会怎样？
+type T = A &amp; B;              // id 是什么？</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>interface C extends A, B</code> → ❌ 编译报错：Interface 'C' cannot simultaneously extend...</li>
+                <li><code>type T = A &amp; B</code> → <code>id: never</code>（不报错但类型不可用）</li>
+              </ul>
+              <p>extends 冲突直接报错；交叉类型把冲突「压成 never」，更隐蔽。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q35" data-qid="q35">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q35 · Vue3 / React 项目里，组件 props 类型一般怎么定义？</h3>
+          </div>
+          <div class="question">
+            <p>泛型组件见过吗？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>React：</strong></p>
+              <pre>interface Props { title: string }
+function Card({ title }: Props) { ... }</pre>
+              <p><strong>Vue3：</strong></p>
+              <pre>const props = defineProps&lt;{ title: string; count?: number }&gt;();</pre>
+              <p><strong>泛型组件：</strong></p>
+              <pre>function List&lt;T&gt;({ items }: { items: T[] }) { ... }</pre>
+              <p>props 本质是对象，用 interface/type 描述形状；泛型组件让 items 与 render 项类型联动。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 十二、运行时 ── -->
+      <section class="section">
+        <h2 class="section-title">十二、运行时</h2>
+
+        <article class="card" id="q36" data-qid="q36">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q36 · 运行时输出什么？（TS 编译后 erase 类型）</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>const obj = { a: 1, b: 'x' };
+console.log(typeof (obj as { a: number; b: string }).b);
+console.log('types erased at runtime');</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出 <code>'string'</code> 和 <code>'types erased at runtime'</code></strong></p>
+              <p>TS 类型只在编译期存在，编译成 JS 后类型注解全部擦掉。<code>as { a: number; b: string }</code> 只是编译期断言，不影响运行时。obj.b 运行时就是 'x'，typeof 得到 'string'。</p>
+              <p>面试常考：TS 不是运行时类型系统（除非用 zod/io-ts 等做 runtime validation）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

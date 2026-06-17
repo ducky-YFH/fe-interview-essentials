@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Promise · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="promise">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>⏳ Promise</h1>
+        <p class="subtitle">高频 · 26 题 · 精练 7 项</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 三种状态（口述 30 秒）</li>
+          <li><a href="#q4">Q4</a> executor 同步 + then 微任务</li>
+          <li><a href="#q9">Q9</a> Event Loop 输出顺序</li>
+          <li><a href="#q12">Q12</a> all / race / allSettled / any 对比表</li>
+          <li><a href="#q19">Q19</a> 串行 vs 并行写法</li>
+          <li><a href="#q23">Q23</a> 忘记 return 的坑</li>
+          <li><a href="#q15">Q15</a> 手写 promiseAll</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、基础概念 ── -->
+      <section class="section">
+        <h2 class="section-title">一、基础概念</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · Promise 有哪三种状态？状态可以怎么变？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>pending</strong>（进行中）</li>
+                <li><strong>fulfilled</strong>（已成功）</li>
+                <li><strong>rejected</strong>（已失败）</li>
+              </ul>
+              <p><strong>状态变化：</strong></p>
+              <ul>
+                <li>pending → fulfilled（调用 resolve）</li>
+                <li>pending → rejected（调用 reject）</li>
+                <li>状态一旦变更就<strong>不可逆</strong>，不能再变</li>
+              </ul>
+              <p><strong>原因：</strong>Promise 是对「单次异步结果」的抽象，settled 后结果应稳定。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q2 · 下面说法哪些正确？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <ul>
+              <li>A. Promise 创建后 executor 会立即执行</li>
+              <li>B. resolve 之后还能再 reject</li>
+              <li>C. .then 的回调一定在微任务队列里执行</li>
+              <li>D. .catch 只能捕获前一个 .then 里的错误</li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>A ✅ executor 在 new Promise 时同步执行</li>
+                <li>B ❌ resolve 后再 reject 无效，状态已锁定</li>
+                <li>C ✅ .then/.catch/.finally 注册的回调进微任务（浏览器里一般是 microtask queue）</li>
+                <li>D ❌ .catch 能捕获链上前面任意环节未处理的 rejection（类似冒泡）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q3 · Promise 和回调函数相比，解决了哪些问题？又带来了什么新问题？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>解决：</strong></p>
+              <ul>
+                <li>回调地狱 → 链式 .then 扁平化</li>
+                <li>错误处理分散 → .catch 统一捕获</li>
+                <li>难以组合多个异步 → all/race/any 等</li>
+              </ul>
+              <p><strong>新问题：</strong></p>
+              <ul>
+                <li>链路过长可读性仍差 → async/await 缓解</li>
+                <li>忘记 return 导致后续 then 提前执行</li>
+                <li>unhandled rejection</li>
+                <li>调试栈不如同步代码直观</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 下面代码输出什么？顺序是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>console.log('1');
+new Promise((resolve) => {
+  console.log('2');
+  resolve('ok');
+  console.log('3');
+}).then((val) => console.log('4', val));
+console.log('5');</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出顺序：1 → 2 → 3 → 5 → 4 ok</strong></p>
+              <p><strong>原因：</strong></p>
+              <ul>
+                <li>new Promise 里 executor 同步执行 → 2、3</li>
+                <li>resolve 只改变状态，then 回调进微任务</li>
+                <li>同步代码 5 先跑完</li>
+                <li>本轮宏任务清空后进微任务 → 4 ok</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q5 · .then / .catch / .finally 各自什么时候执行？finally 里 return 值会影响链式结果吗？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>then(onFulfilled)：</strong>上一环 fulfilled 时执行；onFulfilled 抛错 → 下一环 rejected</li>
+                <li><strong>catch(onRejected)：</strong>捕获 rejected；返回新 fulfilled Promise（除非 catch 里再抛错）</li>
+                <li><strong>finally(onFinally)：</strong>无论成功失败都执行；不接收上一环的值作参数</li>
+              </ul>
+              <p><strong>finally 的 return：</strong></p>
+              <ul>
+                <li>若 finally 没有 return 或 throw，会「透传」上一环的结果</li>
+                <li>若 finally return 了值，会覆盖链的结果（fulfilled）</li>
+                <li>若 finally throw，链变 rejected</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、链式调用 ── -->
+      <section class="section">
+        <h2 class="section-title">二、链式调用</h2>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · 下面每段输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p><strong>6a：</strong></p>
+            <pre>Promise.resolve(1)
+  .then((x) => x + 1)
+  .then((x) => { throw new Error('fail'); })
+  .then((x) => console.log('6a-never', x))
+  .catch((e) => console.log('6a-catch', e.message))
+  .then(() => console.log('6a-after-catch'));</pre>
+            <p><strong>6b：</strong></p>
+            <pre>Promise.resolve(1)
+  .then((x) => Promise.resolve(x + 1))
+  .then((x) => console.log('6b', x));</pre>
+            <p><strong>6c：</strong></p>
+            <pre>Promise.resolve(1)
+  .then((x) => ({ value: x }))
+  .then((x) => console.log('6c', x, typeof x));</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>6a：</strong></p>
+              <pre>6a-catch fail
+6a-after-catch</pre>
+              <p>throw 后跳过后面的 then，进 catch；catch 处理完默认返回 fulfilled，所以 after-catch 仍执行。</p>
+              <p><strong>6b：</strong>6b 2</p>
+              <p>return Promise.resolve(2) 会被「展平」，下一 then 收到 2 不是 Promise 对象。</p>
+              <p><strong>6c：</strong>6c { value: 1 } object</p>
+              <p>return 普通对象，下一 then 直接收到该对象。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · 下面输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>Promise.resolve()
+  .then(() => {
+    console.log('7-1');
+    return new Promise((resolve) => {
+      console.log('7-2');
+      resolve('inner');
+    });
+  })
+  .then((val) => console.log('7-3', val));</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：7-1 → 7-2 → 7-3 inner</strong></p>
+              <p>then 里 return 的 Promise 会被等待；inner resolve 后才触发下一 then。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 错误在 Promise 链中如何传递？下面哪些写法能捕获到 error？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>const p = Promise.reject(new Error('boom'));
+
+// p.then((v) => console.log(v)).catch((e) => console.log('8a', e.message));
+// p.catch((e) => console.log('8b', e.message));
+// p.then(null, (e) => console.log('8c', e.message));
+// try { await p; } catch (e) { console.log('8d', e.message); }</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>能捕获：</strong></p>
+              <ul>
+                <li>8b <code>p.catch(...)</code></li>
+                <li>8c <code>p.then(null, onRejected)</code> — 第二个参数形式</li>
+                <li>8d await + try/catch</li>
+              </ul>
+              <p>8a 只有 then 没有 catch → unhandled rejection（除非外层还有 catch）</p>
+              <p><strong>规则：</strong>rejection 会跳过中间没有 onRejected 的 then，直到遇到 catch 或 then 的第二个参数。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、Event Loop ── -->
+      <section class="section">
+        <h2 class="section-title">三、Event Loop</h2>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q9 · 经典输出顺序题</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>console.log('A');
+
+setTimeout(() => console.log('B'), 0);
+
+Promise.resolve()
+  .then(() => console.log('C'))
+  .then(() => console.log('D'));
+
+console.log('E');</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>顺序：A → E → C → D → B</strong></p>
+              <p>同步 A E → 微任务 C D → 宏任务 B（setTimeout）</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 更复杂的一题</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>console.log('start');
+
+setTimeout(() => {
+  console.log('timeout1');
+  Promise.resolve().then(() => console.log('promise-in-timeout'));
+}, 0);
+
+Promise.resolve()
+  .then(() => {
+    console.log('promise1');
+    setTimeout(() => console.log('timeout2'), 0);
+  })
+  .then(() => console.log('promise2'));
+
+console.log('end');</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>顺序：start → end → promise1 → promise2 → timeout1 → promise-in-timeout → timeout2</strong></p>
+              <ol>
+                <li>同步 start end</li>
+                <li>微任务 promise1，其 then 注册 setTimeout(timeout2)</li>
+                <li>微任务 promise2</li>
+                <li>宏任务 timeout1，内部 then 注册微任务 promise-in-timeout</li>
+                <li>微任务 promise-in-timeout</li>
+                <li>宏任务 timeout2</li>
+              </ol>
+              <p><strong>面试答法：</strong>先同步，再清空微任务，再取一个宏任务，循环。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q11 · async/await 和 Promise.then 在调度上有什么关系？下面输出顺序？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>async function q11() {
+  console.log('11-1');
+
+  await Promise.resolve();
+  console.log('11-2');
+
+  Promise.resolve().then(() => console.log('11-3'));
+
+  console.log('11-4');
+}</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>顺序：11-1 → 11-2 → 11-4 → 11-3</strong></p>
+              <ul>
+                <li>await 之前同步执行 → 11-1</li>
+                <li>await Promise.resolve() 已 fulfilled，await 之后的代码整体作为微任务调度</li>
+                <li>该微任务内顺序执行：11-2 → 注册 11-3 的微任务 → 11-4</li>
+                <li>微任务队列下一轮 → 11-3</li>
+              </ul>
+              <p><strong>记忆：</strong>await = 「把后面代码包进 .then」；await 后的同步代码仍在同一微任务里顺序跑完。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、静态方法 ── -->
+      <section class="section">
+        <h2 class="section-title">四、静态方法</h2>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q12 · Promise.all / Promise.race / Promise.allSettled / Promise.any 各自语义？入参有 rejected 时行为？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>方法</th>
+                    <th>成功条件</th>
+                    <th>失败条件</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Promise.all</td>
+                    <td>全部 fulfilled</td>
+                    <td>任一 rejected → 立即 reject</td>
+                  </tr>
+                  <tr>
+                    <td>Promise.race</td>
+                    <td>第一个 settled</td>
+                    <td>第一个 settled 若是 reject 则 reject</td>
+                  </tr>
+                  <tr>
+                    <td>Promise.allSettled</td>
+                    <td>全部 settled</td>
+                    <td>永不 reject，返回每项 status 结果</td>
+                  </tr>
+                  <tr>
+                    <td>Promise.any</td>
+                    <td>任一 fulfilled</td>
+                    <td>全部 rejected → AggregateError</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q13" data-qid="q13">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q13 · 下面输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>const slow = new Promise((r) => setTimeout(() => r('slow'), 100));
+const fast = Promise.resolve('fast');
+const fail = Promise.reject(new Error('fail'));
+
+Promise.race([slow, fast, fail]).then(console.log).catch(console.log);
+Promise.any([fail, Promise.reject('x')]).then(console.log).catch(console.log);
+Promise.allSettled([fast, fail]).then(console.log);</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>race([slow, fast, fail])</code> → 很快 reject Error('fail')（fail 最先 settled）</li>
+                <li><code>any([fail, reject('x')])</code> → reject AggregateError（全部失败）</li>
+                <li><code>allSettled([fast, fail])</code> → [{status:'fulfilled',value:'fast'},{status:'rejected',reason:...}]</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q14" data-qid="q14">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q14 · Promise.all 里某个 promise 抛错，其他还在执行的会怎样？需要写 abort / 取消逻辑吗？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>某个 rejected 后，Promise.all 立即 reject，但<strong>其他 promise 仍在运行</strong>，不会被自动 abort。</p>
+              <p>若需节省资源，应自己实现 AbortController / 标志位 / 可取消封装。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q15" data-qid="q15">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q15 · 实现 promiseAll(promises)</h3>
+          </div>
+          <div class="question">
+            <p>手写 <code>promiseAll</code>，语义与 <code>Promise.all</code> 一致。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>function promiseAll&lt;T&gt;(promises: Array&lt;T | PromiseLike&lt;T&gt;&gt;): Promise&lt;T[]&gt; {
+  return new Promise((resolve, reject) =&gt; {
+    const result: T[] = [];
+    let count = 0;
+    const len = promises.length;
+    if (len === 0) return resolve([]);
+    promises.forEach((p, i) =&gt; {
+      Promise.resolve(p).then(
+        (val) =&gt; {
+          result[i] = val;
+          if (++count === len) resolve(result);
+        },
+        reject
+      );
+    });
+  });
+}</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 五、async/await ── -->
+      <section class="section">
+        <h2 class="section-title">五、async/await</h2>
+
+        <article class="card" id="q16" data-qid="q16">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q16 · async 函数返回值类型是什么？没有 await 的 async 函数等价于什么？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>async 函数<strong>始终返回 Promise</strong></li>
+                <li>无 await 时等价于 <code>Promise.resolve(返回值)</code></li>
+                <li>throw 等价于 <code>Promise.reject</code></li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q17" data-qid="q17">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q17 · 下面输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>async function foo() { return 42; }
+async function bar() { return Promise.resolve(42); }
+
+foo().then((v) => console.log('17-foo', v, v instanceof Promise));
+bar().then((v) => console.log('17-bar', v, v instanceof Promise));</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>17-foo 42 false
+17-bar 42 false</pre>
+              <p>async return 的值会被包装成 fulfilled Promise，且自动展平嵌套 Promise。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q18" data-qid="q18">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q18 · await 后面跟非 Promise 值会怎样？await 1 和 await Promise.resolve(1) 有区别吗？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><code>await x</code> 等价于 <code>await Promise.resolve(x)</code>。</p>
+              <p>都会暂停 async 函数，但非 Promise 值不会多一次异步（仍进微任务队列）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q19" data-qid="q19">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q19 · 如何在 async 函数里「串行」执行多个异步任务？如何「并行」执行？各有什么性能差异？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>const tasks = [
+  () => new Promise((r) => setTimeout(() => r(1), 100)),
+  () => new Promise((r) => setTimeout(() => r(2), 100)),
+  () => new Promise((r) => setTimeout(() => r(3), 100)),
+];</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>串行（总耗时累加）：</strong></p>
+              <pre>for (const task of tasks) {
+  await task();
+}</pre>
+              <p><strong>并行（总耗时≈最慢那个）：</strong></p>
+              <pre>await Promise.all(tasks.map((t) => t()));</pre>
+              <p><strong>注意：</strong>forEach 里写 await 不会串行等待，因为 forEach 回调不是 async 语义上的串行循环。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q20" data-qid="q20">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q20 · try/catch 能捕获 async 函数里 await 的 rejection 吗？下面输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>async function run() {
+  try {
+    await Promise.reject(new Error('async error'));
+    console.log('20-never');
+  } catch (e) {
+    console.log('20-catch', e.message);
+  }
+}</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>能捕获。输出：20-catch async error</strong></p>
+              <p>await 的 rejection 在 async 函数内表现为「可 throw 的错误」。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 六、场景&坑 ── -->
+      <section class="section">
+        <h2 class="section-title">六、场景&坑</h2>
+
+        <article class="card" id="q21" data-qid="q21">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q21 · 什么是 unhandled promise rejection？如何避免？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>Promise reject 后没有任何 .catch / try-await-catch 处理。</p>
+              <ul>
+                <li>Node：<code>process.on('unhandledRejection')</code></li>
+                <li>浏览器：<code>unhandledrejection</code> 事件</li>
+              </ul>
+              <p><strong>避免：</strong>链末尾 .catch；async 里 try/catch；全局兜底监听。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q22" data-qid="q22">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q22 · Promise.resolve(p) 和 new Promise(r =&gt; r(p)) 一样吗？如果 p 本身是 rejected Promise 呢？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>若 p 是 thenable/Promise：</p>
+              <ul>
+                <li><code>Promise.resolve(p)</code> 会展开 p，跟随其最终状态（fulfilled 或 rejected）</li>
+                <li><code>new Promise(r =&gt; r(p))</code> 若 p rejected，r(p) 会把外层也 reject（类似展平）</li>
+              </ul>
+              <p>二者对 thenable 行为类似，但 Promise.resolve 是标准静态方法，更常用。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q23" data-qid="q23">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q23 · 下面有什么问题？如何改？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre>fetchUser()
+  .then((user) => {
+    fetchOrders(user.id); // 漏写 return
+  })
+  .then(() => {
+    console.log('orders loaded'); // 会等 fetchOrders 完成吗？
+  });</pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><code>orders loaded</code> 会在 fetchUser 完成后<strong>几乎立刻</strong>打印，不会等 fetchOrders。</p>
+              <p>因为 then 里没有 return fetchOrders(...)，下一 then 收到 undefined 且不会等待。</p>
+              <p><strong>修复：</strong></p>
+              <pre>.then((user) => fetchOrders(user.id))</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q24" data-qid="q24">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q24 · 实现带并发限制的请求调度器</h3>
+          </div>
+          <div class="question">
+            <p>例如：最多同时 3 个请求，完成一个再补下一个。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>async function runPool&lt;T&gt;(
+  tasks: (() =&gt; Promise&lt;T&gt;)[],
+  limit: number
+): Promise&lt;T[]&gt; {
+  const results: T[] = new Array(tasks.length);
+  let index = 0;
+
+  async function worker() {
+    while (index &lt; tasks.length) {
+      const cur = index++;
+      results[cur] = await tasks[cur]();
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(limit, tasks.length) }, () =&gt;
+    worker()
+  );
+  await Promise.all(workers);
+  return results;
+}</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q25" data-qid="q25">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q25 · 实现 sleep(ms) 和 timeout(promise, ms)</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>function sleep(ms: number): Promise&lt;void&gt; {
+  return new Promise((resolve) =&gt; setTimeout(resolve, ms));
+}
+
+function timeout&lt;T&gt;(promise: Promise&lt;T&gt;, ms: number): Promise&lt;T&gt; {
+  return Promise.race([
+    promise,
+    sleep(ms).then(() =&gt; Promise.reject(new Error('timeout'))),
+  ]);
+}</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q26" data-qid="q26">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q26 · 如何用 Promise 实现 retry(fn, times)？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>async function retry&lt;T&gt;(
+  fn: () =&gt; Promise&lt;T&gt;,
+  times: number,
+  delay = 0
+): Promise&lt;T&gt; {
+  let lastError: unknown;
+  for (let i = 0; i &lt; times; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastError = e;
+      if (i &lt; times - 1 &amp;&amp; delay &gt; 0) {
+        await new Promise((r) =&gt; setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastError;
+}</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

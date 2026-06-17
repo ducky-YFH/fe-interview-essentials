@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>箭头函数 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="arrow">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🏹 箭头函数</h1>
+        <p class="subtitle">输出+概念 · 25 题 · 精练 8 项</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q4">Q4</a> 对象方法里的 this</li>
+          <li><a href="#q6">Q6</a> 箭头函数改对象属性</li>
+          <li><a href="#q7">Q7</a> 构造函数 + 箭头方法</li>
+          <li><a href="#q9">Q9</a> 循环 + var + 闭包</li>
+          <li><a href="#q11">Q11</a> 箭头函数不能 new</li>
+          <li><a href="#q15">Q15</a> bind 改不了 this</li>
+          <li><a href="#q16">Q16</a> setInterval this 修复</li>
+          <li><a href="#q21">Q21</a> 与普通函数核心区别</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、输出题 ── -->
+      <section class="section">
+        <h2 class="section-title">一、输出题（Q1-Q10）</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q1 · 以下分别输出什么？</h3>
+          </div>
+          <pre><code data-runnable>const fn1 = () =&gt; { 42 };
+const fn2 = () =&gt; 42;
+console.log(fn1());
+console.log(fn2());</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>undefined, 42</strong></p>
+              <ul>
+                <li>块体 <code>{}</code> 里没有 <code>return</code></li>
+                <li>表达式体隐式 <code>return</code></li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q2 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>const calc = (a, b) =&gt; (a + b, a * b, a - b);
+console.log(calc(3, 4));</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>12</strong>（<code>3 * 4</code>）</p>
+              <p>括号里是逗号表达式，值为最后一项 <code>a * b</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q3 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>const getUser = () =&gt; ({ name: 'Alice' });
+const broken = () =&gt; { name: 'Bob' };
+console.log(getUser());
+console.log(broken());</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>{ name: 'Alice' }, undefined</strong></p>
+              <ul>
+                <li><code>broken</code> 的 <code>{}</code> 是函数体，没有 <code>return</code></li>
+                <li><code>getUser</code> 用 <code>() =&gt; ({})</code> 才是返回对象</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>const obj = {
+  name: 'obj',
+  regular() {
+    console.log(this.name);
+  },
+  arrow: () =&gt; {
+    console.log(this.name);
+  },
+};
+obj.regular();
+try {
+  obj.arrow();
+} catch (e) {
+  console.log(e.message);
+}</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>'obj'，然后 TypeError</strong>（Node 严格模式：外层 this 为 undefined，读 <code>this.name</code> 报错）</p>
+              <ul>
+                <li><code>regular</code> 的 this 是 obj</li>
+                <li><code>arrow</code> 继承外层 this，不指向 obj</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q5 · 输出什么？（Node 环境）</h3>
+          </div>
+          <pre><code data-runnable>const obj = {
+  name: 'inner',
+  show: () =&gt; console.log(this.name),
+};
+try {
+  obj.show();
+} catch (e) {
+  console.log(e.message);
+}</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>TypeError</strong>（Node 严格模式外层 this 为 undefined）</p>
+              <p>箭头函数不绑定 obj，this 来自定义处外层。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>const obj = {
+  count: 0,
+  inc: () =&gt; {
+    this.count++;
+  },
+  incRegular() {
+    this.count++;
+  },
+};
+try {
+  obj.inc();
+} catch (e) {
+  console.log('inc:', e.message);
+}
+obj.incRegular();
+console.log('count:', obj.count);</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>inc 报错（Cannot read properties of undefined），count: 1</strong></p>
+              <ul>
+                <li><code>inc</code> 改外层 <code>this.count</code></li>
+                <li><code>incRegular</code> 正确修改 <code>obj.count</code></li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q7 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>function Foo() {
+  this.val = 1;
+  this.getVal = () =&gt; this.val;
+  this.getValRegular = function () {
+    return this.val;
+  };
+}
+const f = new Foo();
+const getVal = f.getVal;
+const getValRegular = f.getValRegular;
+console.log(getVal());
+try {
+  console.log(getValRegular());
+} catch (e) {
+  console.log(e.message);
+}</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>1，然后 TypeError: Cannot read properties of undefined (reading 'val')</strong></p>
+              <ul>
+                <li>箭头函数 <code>getVal</code> 词法绑定创建时的实例 f</li>
+                <li><code>getValRegular</code> 独立调用 this 丢失</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>const obj = {
+  items: [1, 2, 3],
+  print() {
+    this.items.forEach(function (n) {
+      console.log(n, this);
+    });
+  },
+  printArrow() {
+    this.items.forEach((n) =&gt; {
+      console.log(n, this === obj);
+    });
+  },
+};
+obj.printArrow();</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>依次 1 true, 2 true, 3 true</strong></p>
+              <p><code>forEach</code> 的箭头回调继承 <code>printArrow</code> 的 this（即 obj）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q9 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>var i = 0;
+const fns = [];
+for (var i = 0; i &lt; 3; i++) {
+  fns.push(() =&gt; console.log(i));
+}
+fns[0]();
+fns[1]();
+fns[2]();</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>3, 3, 3</strong></p>
+              <ul>
+                <li><code>var</code> 没有块级作用域</li>
+                <li>箭头函数闭包共享同一个 i；循环结束后 i === 3</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 输出什么？</h3>
+          </div>
+          <pre><code data-runnable>const obj = {
+  x: 10,
+  getX: () =&gt; this.x,
+  getXRegular() {
+    return this.x;
+  },
+};
+try {
+  console.log(obj.getX());
+} catch (e) {
+  console.log('getX:', e.message);
+}
+console.log(obj.getXRegular());</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>getX 报错，10</strong></p>
+              <ul>
+                <li><code>getX</code> 箭头函数 this 不指向 obj</li>
+                <li><code>getXRegular</code> 正常</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、报错题 ── -->
+      <section class="section">
+        <h2 class="section-title">二、报错题（Q11-Q15）</h2>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q11 · 下面哪行会报错？报什么错？</h3>
+          </div>
+          <pre><code>const Person = (name) =&gt; {
+  this.name = name;
+};
+// A
+const p = new Person('Tom');
+// B
+console.log(Person.prototype);
+// C
+Person.call({ name: 'Jerry' });</code></pre>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>A</strong> 报错 <code>TypeError: Person is not a constructor</code></li>
+                <li><strong>B</strong> 输出 <code>undefined</code>（箭头函数无 prototype）</li>
+                <li><strong>C</strong> 不报错但无法改变 this，仍用外层 this</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q12 · 下面会怎样？</h3>
+          </div>
+          <pre><code>const bar = () =&gt; {
+  console.log(arguments);
+};
+bar(1, 2, 3);</code></pre>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>ReferenceError: arguments is not defined</strong>（严格模式顶层箭头函数）</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q13" data-qid="q13">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q13 · 下面会怎样？</h3>
+          </div>
+          <pre><code>sayHi();
+const sayHi = () =&gt; console.log('hi');</code></pre>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>ReferenceError: Cannot access 'sayHi' before initialization</strong>（TDZ，const 不提升）</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q14" data-qid="q14">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q14 · 能否通过编译？若不能，原因是什么？</h3>
+          </div>
+          <pre><code>const gen = *() =&gt; yield 1;</code></pre>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>语法错误</strong>，箭头函数不能作 Generator（不能写 <code>function*</code> 也不能 <code>*() =&gt;</code>）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q15" data-qid="q15">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q15 · 输出什么？bind 能改变箭头函数的 this 吗？</h3>
+          </div>
+          <pre><code data-runnable>const obj = { n: 100 };
+const fn = () =&gt; console.log(this?.n);
+const bound = fn.bind(obj);
+bound();</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>undefined</strong></p>
+              <p><code>bind</code> 不能改箭头函数已绑定的 lexical this。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、改错&手写 ── -->
+      <section class="section">
+        <h2 class="section-title">三、改错&amp;手写（Q16-Q20）</h2>
+
+        <article class="card" id="q16" data-qid="q16">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q16 · 计时器为什么 count 一直是 NaN？如何改一行修复？</h3>
+          </div>
+          <pre><code>const counter = {
+  count: 0,
+  run() {
+    setInterval(function () {
+      this.count++;
+      console.log(this.count);
+    }, 100);
+  },
+};
+counter.run();</code></pre>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><code>setInterval</code> 回调里 this 不是 counter。</p>
+              <p><strong>修复：</strong></p>
+              <pre>setInterval(() =&gt; { this.count++; ... }, 100);</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q17" data-qid="q17">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q17 · 只改 handler 的定义，让下面打印 'myApp'</h3>
+          </div>
+          <pre><code>const app = {
+  name: 'myApp',
+  run() {
+    const handler = function () {
+      console.log(this.name);
+    };
+    handler();
+  },
+};</code></pre>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>const handler = () =&gt; console.log(this.name);</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q18" data-qid="q18">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q18 · 手写 createMultiplier</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 要求</div>
+            <ul>
+              <li><code>createMultiplier(5)(3) === 15</code></li>
+              <li><code>createMultiplier(2)(10) === 20</code></li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>const createMultiplier = f =&gt; n =&gt; n * f;</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q19" data-qid="q19">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q19 · 用箭头函数一行实现数组去重</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 要求</div>
+            <p>输入 <code>[1, 2, 2, 3, 1]</code>，输出 <code>[1, 2, 3]</code>（ES6，不用 Set 也行）</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>arr.filter((v, i, a) =&gt; a.indexOf(v) === i)</pre>
+              <p>或 <code>[...new Set(arr)]</code>（若允许 Set）</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q20" data-qid="q20">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q20 · 实现 compose，要求箭头函数写法</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 要求</div>
+            <ul>
+              <li><code>compose(f, g)(x) === f(g(x))</code></li>
+              <li>例：<code>compose(x =&gt; x + 1, x =&gt; x * 2)(3) === 7</code></li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre>const compose = (f, g) =&gt; x =&gt; f(g(x));</pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、概念题 ── -->
+      <section class="section">
+        <h2 class="section-title">四、概念题（Q21-Q25）</h2>
+
+        <article class="card" id="q21" data-qid="q21">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q21 · 箭头函数和普通函数有哪些核心区别？至少说 4 点</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>无 own this / 无 arguments / 不能 new / 无 prototype / 无 hoisting（const）等</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q22" data-qid="q22">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q22 · 为什么 React 类组件里推荐写 this.handleClick = () =&gt; {} ？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>保证回调里 this 指向组件实例，且每次 render 不必 bind。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q23" data-qid="q23">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q23 · 对象字面量里哪些场景应该用普通方法，哪些场景适合箭头函数？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>需要 this 指对象 → 普通方法；定时器/回调要捕获外层 this → 箭头函数。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q24" data-qid="q24">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q24 · 下面说法对错？简要说明</h3>
+          </div>
+          <div class="question">
+            <ul>
+              <li>(a) 箭头函数没有 prototype</li>
+              <li>(b) 箭头函数可以用 new 调用</li>
+              <li>(c) 箭头函数的 this 在定义时确定，普通函数在调用时确定</li>
+              <li>(d) DOM 点击事件若需要 event.currentTarget，应优先用箭头函数</li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>(a) 对</li>
+                <li>(b) 错</li>
+                <li>(c) 对</li>
+                <li>(d) 错，DOM 需要 this 指向元素时用普通函数</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q25" data-qid="q25">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q25 · Vue 2 选项式 API 里，methods 里为什么一般不用箭头函数定义方法？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>箭头函数 this 不指向 Vue 实例，<code>this.xxx</code> 访问不到 data/methods。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

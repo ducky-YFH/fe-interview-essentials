@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>闭包 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="closure">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🔒 闭包</h1>
+        <p class="subtitle">含实战场景 · 15 题 · 精练 7 项</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 用一句话说清什么是闭包</li>
+          <li><a href="#q3">Q3</a> 经典循环 + setTimeout 输出</li>
+          <li><a href="#q5">Q5</a> 防抖 debounce 场景 + 实现思路</li>
+          <li><a href="#q6">Q6</a> 节流 throttle 场景 + 和防抖区别</li>
+          <li><a href="#q7">Q7</a> 模块/私有变量场景（数据封装）</li>
+          <li><a href="#q9">Q9</a> 柯里化 curry 场景</li>
+          <li><a href="#q12">Q12</a> 闭包会导致内存泄漏吗？怎么避免</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、基础概念 ── -->
+      <section class="section">
+        <h2 class="section-title">一、基础概念</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 什么是闭包？用一句话向面试官解释</h3>
+          </div>
+          <div class="question">
+            <p>用一句话说清什么是闭包。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>
+                <strong>闭包 = 函数 + 其词法作用域（创建时能访问到的外部变量）的组合；</strong>
+                函数在定义作用域之外被调用时，仍能访问定义时的外部变量。
+              </p>
+              <p><strong>面试口述模板：</strong></p>
+              <p>
+                「当一个内部函数引用了外部函数的变量，且内部函数在外部函数执行完后
+                仍被引用时，就形成了闭包。JS 靠闭包实现私有变量、防抖节流等。」
+              </p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q2 · 下面哪些会形成闭包？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>// A
+function outer() {
+  const x = 1;
+  function inner() {
+    console.log(x);
+  }
+  return inner;
+}
+
+// B
+function foo() {
+  let count = 0;
+  return () =&gt; ++count;
+}
+
+// C
+function bar() {
+  console.log("no outer var");
+}
+
+// D
+const handlers = [];
+for (let i = 0; i &lt; 3; i++) {
+  handlers.push(() =&gt; console.log(i));
+}</code></pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>A ✅ inner 引用了 outer 的 x，且被 return 出去</li>
+                <li>B ✅ 箭头函数引用了 count，且被 return</li>
+                <li>C ❌ 没有引用外部变量</li>
+                <li>D ✅ 每个箭头函数形成闭包，各自捕获当次循环的 i（let 块级作用域）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、经典坑题 ── -->
+      <section class="section">
+        <h2 class="section-title">二、经典坑题</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · var + 循环 + setTimeout</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>for (var i = 0; i &lt; 3; i++) {
+  setTimeout(() =&gt; console.log("3-var", i), 0);
+}</code></pre>
+          </div>
+          <div class="question">
+            <p>下面输出什么？如何改成输出 0 1 2？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：3 3 3</strong></p>
+              <p><strong>原因：</strong></p>
+              <ul>
+                <li>var 没有块级作用域，循环结束后 i === 3</li>
+                <li>三个 setTimeout 共享同一个 i，执行时已是 3</li>
+              </ul>
+              <p><strong>改成 0 1 2 的三种方式：</strong></p>
+              <ol>
+                <li>用 let（推荐）—— 每次循环新绑定</li>
+                <li>IIFE：<code>setTimeout((function(j){ return () =&gt; console.log(j); })(i), 0)</code></li>
+                <li>setTimeout 第三参：<code>setTimeout((j) =&gt; () =&gt; console.log(j), 0, i)</code></li>
+              </ol>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q4 · let + 循环 + setTimeout</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>for (let i = 0; i &lt; 3; i++) {
+  setTimeout(() =&gt; console.log("4-let", i), 0);
+}</code></pre>
+          </div>
+          <div class="question">
+            <p>下面输出什么？和 Q3 有何不同？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：0 1 2</strong></p>
+              <p><strong>原因：</strong></p>
+              <p>
+                let 在 for 循环里每次迭代创建新的词法环境，每个闭包捕获各自的 i。
+              </p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、实战场景 ── -->
+      <section class="section">
+        <h2 class="section-title">三、实战场景</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 防抖 debounce</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              搜索框输入时调接口，用户每敲一个字都会发请求，浪费且卡顿。
+              需求：停止输入 300ms 后再发请求。
+            </p>
+          </div>
+          <div class="question">
+            <p>为什么闭包适合做这个？手写 debounce(fn, delay)。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>为什么用闭包：</strong></p>
+              <p>
+                需要跨多次调用「记住」timerId，且不能污染全局 —— 闭包私有变量最合适。
+              </p>
+              <pre><code>function debounce(fn, delay) {
+  let timer = null;
+  return (...args) =&gt; {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() =&gt; fn(...args), delay);
+  };
+}</code></pre>
+              <p><strong>场景：</strong>搜索联想、表单校验、窗口 resize 结束后重新布局。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 节流 throttle</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              滚动监听、resize、按钮防重复点击——高频事件里限制执行频率。
+              需求：无论触发多频繁，最多每 200ms 执行一次。
+            </p>
+          </div>
+          <div class="question">
+            <p>节流和防抖的区别？各自适合什么场景？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>区别：</strong></p>
+              <ul>
+                <li>防抖：连续触发只认「最后一次」，适合搜索输入</li>
+                <li>节流：固定间隔最多执行一次，适合 scroll / mousemove / 按钮连点</li>
+              </ul>
+              <pre><code>function throttle(fn, interval) {
+  let last = 0;
+  let timer = null;
+  return (...args) =&gt; {
+    const now = Date.now();
+    const remaining = interval - (now - last);
+    if (remaining &lt;= 0) {
+      if (timer) { clearTimeout(timer); timer = null; }
+      last = now;
+      fn(...args);
+    } else if (!timer) {
+      timer = setTimeout(() =&gt; {
+        last = Date.now();
+        timer = null;
+        fn(...args);
+      }, remaining);
+    }
+  };
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q7 · 私有变量 / 模块模式</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              做一个计数器，外部只能 +1 和读值，不能直接改内部 count。
+            </p>
+          </div>
+          <div class="question">
+            <p>不用 class private，如何用闭包实现 createCounter()？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function createCounter() {
+  let count = 0; // 闭包私有，外部无法直接访问
+  return {
+    increment: () =&gt; ++count,
+    getCount: () =&gt; count,
+  };
+}</code></pre>
+              <p><strong>场景：</strong></p>
+              <ul>
+                <li>模块模式（ES Module 之前常用）</li>
+                <li>不想暴露内部状态的工厂函数</li>
+                <li>替代 class private 的轻量方案</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 只执行一次 once</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              初始化配置、埋点上报「页面只报一次」、懒加载单例。
+            </p>
+          </div>
+          <div class="question">
+            <p>用闭包实现 once(fn)，第二次起返回第一次的结果。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function once(fn) {
+  let called = false;
+  let result;
+  return function (...args) {
+    if (!called) {
+      called = true;
+      result = fn.apply(this, args);
+    }
+    return result;
+  };
+}</code></pre>
+              <p><strong>场景：</strong>初始化只跑一次、单例 getInstance、首次访问埋点。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q9 · 柯里化 curry</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>const add = (a, b, c) =&gt; a + b + c;
+const curriedAdd = curry(add);
+curriedAdd(1)(2)(3) === 6
+curriedAdd(1, 2)(3) === 6</code></pre>
+          </div>
+          <div class="question">
+            <p>柯里化在实际项目里有什么用？（提示：参数复用、偏函数）</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>实际用途：</strong></p>
+              <ul>
+                <li>固定部分参数：<code>const logError = curry(log)('ERROR')</code></li>
+                <li>配置复用：<code>createRequest(baseURL)(path)(options)</code></li>
+                <li>函数组合 pipeline</li>
+              </ul>
+              <pre><code>function curry(fn) {
+  return function curried(...args) {
+    if (args.length &gt;= fn.length) {
+      return fn.apply(this, args);
+    }
+    return (...next) =&gt; curried.apply(this, args.concat(next));
+  };
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 缓存 memoize</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              斐波那契、复杂计算、接口结果缓存——相同入参不重复计算。
+            </p>
+          </div>
+          <div class="question">
+            <p>闭包里的 cache 对象为什么不会被 GC 掉？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function memoize(fn) {
+  const cache = new Map();
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) return cache.get(key);
+    const result = fn(...args);
+    cache.set(key, result);
+    return result;
+  };
+}</code></pre>
+              <p><strong>为什么 cache 不被 GC：</strong></p>
+              <p>
+                返回的函数仍被引用 → 闭包链活着 → cache 一直被持有。
+                这是刻意的设计（用空间换时间），但若 cache 无限增长需设上限或 WeakMap。
+              </p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、输出 & 理解 ── -->
+      <section class="section">
+        <h2 class="section-title">四、输出 &amp; 理解</h2>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q11 · 独立闭包输出</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>function make() {
+  let a = 0;
+  return {
+    get: () =&gt; a,
+    set: (v) =&gt; { a = v; },
+  };
+}
+const c1 = make();
+const c2 = make();
+c1.set(10);
+console.log("11", c1.get(), c2.get());</code></pre>
+          </div>
+          <div class="question">
+            <p>下面输出什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：11 10 0</strong></p>
+              <p>c1、c2 各自独立闭包，互不影响。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q12 · 闭包会导致内存泄漏吗？</h3>
+          </div>
+          <div class="question">
+            <p>闭包会导致内存泄漏吗？什么情况下会？如何避免？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>闭包本身不是泄漏，但：</p>
+              <ul>
+                <li>闭包长期持有大对象引用（DOM 节点、大数组）</li>
+                <li>忘记 removeEventListener</li>
+                <li>定时器未 clear</li>
+              </ul>
+              <p><strong>避免：</strong></p>
+              <ul>
+                <li>只闭包需要的变量（Q13 里应只闭包 id，不引 hugeData）</li>
+                <li>组件卸载时清理 listener / timer</li>
+                <li>需要时用 WeakMap 做缓存</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q13" data-qid="q13">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q13 · 内存陷阱</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>const hugeData = new Array(1_000_000).fill("x");
+
+function createHandler() {
+  const id = 1;
+  return () =&gt; console.log(id, hugeData.length);
+}
+
+const handler = createHandler();
+// handler 还在，hugeData 就释放不了</code></pre>
+          </div>
+          <div class="question">
+            <p>下面有什么问题？如何修复？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>
+                createHandler 闭包引用了整个 hugeData，但只用 id。
+                handler 存活期间 hugeData 无法释放 → 浪费内存。
+              </p>
+              <p><strong>修复：</strong></p>
+              <pre><code>function createHandler() {
+  const id = 1;
+  return () =&gt; console.log(id); // 不引用 hugeData
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 五、综合 ── -->
+      <section class="section">
+        <h2 class="section-title">五、综合</h2>
+
+        <article class="card" id="q14" data-qid="q14">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q14 · React 与闭包</h3>
+          </div>
+          <div class="question">
+            <p>
+              React 里 useEffect / useState 和闭包有什么关系？
+              为什么有时 setState 里读到的是「旧值」？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>每次 render，函数组件体内的变量是「当次 render 的快照」</li>
+                <li>useEffect 回调捕获 render 时的 props/state → 闭包 stale 问题</li>
+                <li>解决：依赖数组、useRef 存最新值、函数式更新 <code>setState(prev =&gt; ...)</code></li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q15" data-qid="q15">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q15 · 事件监听器闭包</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>let count = 0;
+const btn = { addEventListener: (_, fn) =&gt; fn }; // 模拟
+
+for (var i = 0; i &lt; 3; i++) {
+  btn.addEventListener("click", () =&gt; {
+    count++;
+    console.log("15", i, count);
+  });
+}
+// 模拟点 3 次</code></pre>
+          </div>
+          <div class="question">
+            <p>事件监听器里用闭包要注意什么？点击 3 次后，期望输出什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>
+                for (var i...) 注册了 3 个 listener，都共享 i === 3。
+                点一次按钮三个 listener 都触发，各打 15 3 1 / 15 3 2 / 15 3 3（count 递增）。
+              </p>
+              <p>实际 DOM 里通常只绑一个 listener 或用事件委托更好。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>
