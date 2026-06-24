@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>手写题 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="handwrite">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>✍️ 手写题</h1>
+        <p class="subtitle">含实战场景 · 12 题 · 精练 7 项 · 与 <a href="closure.html">闭包</a> / <a href="vue-router.html">Vue Router</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题 · 先闭卷写再对答案</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 数组 flatten 扁平化</li>
+          <li><a href="#q2">Q2</a> 数组去重</li>
+          <li><a href="#q3">Q3</a> debounce / throttle（见闭包专题）</li>
+          <li><a href="#q4">Q4</a> 深拷贝（见类型专题）</li>
+          <li><a href="#q5">Q5</a> 手写 bind / call / apply</li>
+          <li><a href="#q8">Q8</a> 发布订阅 EventEmitter</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、数组 &amp; 对象</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 手写 flatten，支持指定深度</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>后端返回嵌套分类树要转成一维 id 列表——<code>flatten([1, [2, [3]], 4], 2)</code></p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function flatten(arr, depth = Infinity) {
+  const result = [];
+  for (const item of arr) {
+    if (Array.isArray(item) &amp;&amp; depth &gt; 0) {
+      result.push(...flatten(item, depth - 1));
+    } else {
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+// 简易版：arr.flat(Infinity)</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 数组去重几种写法？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>// Set
+[...new Set(arr)]
+
+// filter + indexOf
+arr.filter((v, i) =&gt; arr.indexOf(v) === i)
+
+// 对象数组按 key 去重
+const map = new Map();
+list.forEach((item) =&gt; map.set(item.id, item));
+[...map.values()]</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · debounce 和 throttle 手写</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>搜索框联想 vs 滚动加载——各用哪个？完整实现见 <a href="closure.html">闭包 Q5/Q6</a>。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function debounce(fn, delay) {
+  let timer = null;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() =&gt; fn.apply(this, args), delay);
+  };
+}
+
+function throttle(fn, interval) {
+  let last = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - last &gt;= interval) {
+      last = now;
+      fn.apply(this, args);
+    }
+  };
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 深拷贝（含循环引用）</h3>
+          </div>
+          <p>完整版见 <a href="types.html#q8">类型&拷贝 Q8</a>。</p>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function deepClone(val, cache = new WeakMap()) {
+  if (val === null || typeof val !== 'object') return val;
+  if (cache.has(val)) return cache.get(val);
+  const result = Array.isArray(val) ? [] : {};
+  cache.set(val, result);
+  for (const k of Reflect.ownKeys(val)) {
+    result[k] = deepClone(val[k], cache);
+  }
+  return result;
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、函数</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 手写 myBind</h3>
+          </div>
+          <p>完整版见 <a href="this.html#q8">this Q8</a>。</p>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>Function.prototype.myBind = function (ctx, ...preset) {
+  const fn = this;
+  return function bound(...args) {
+    const isNew = this instanceof bound;
+    return fn.apply(isNew ? this : ctx, preset.concat(args));
+  };
+};</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · 手写 curry</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function curry(fn) {
+  return function curried(...args) {
+    if (args.length &gt;= fn.length) return fn.apply(this, args);
+    return (...next) =&gt; curried.apply(this, args.concat(next));
+  };
+}</code></pre>
+              <p>见 <a href="closure.html">闭包 Q9</a> 场景说明。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · compose 函数组合</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>const compose = (f, g) =&gt; (x) =&gt; f(g(x));
+// 多函数：reduce 右到左</code></pre>
+              <p>见 <a href="arrow.html">箭头函数 Q20</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">三、设计型手写</h2>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · 发布订阅 EventEmitter</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>上传任务中心：进度、完成、失败要通知多个 UI 组件——实现简易事件总线。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>class EventEmitter {
+  #map = new Map();
+
+  on(event, fn) {
+    if (!this.#map.has(event)) this.#map.set(event, new Set());
+    this.#map.get(event).add(fn);
+    return () =&gt; this.off(event, fn);
+  }
+
+  off(event, fn) {
+    this.#map.get(event)?.delete(fn);
+  }
+
+  emit(event, ...args) {
+    this.#map.get(event)?.forEach((fn) =&gt; fn(...args));
+  }
+
+  once(event, fn) {
+    const wrap = (...args) =&gt; {
+      this.off(event, wrap);
+      fn(...args);
+    };
+    this.on(event, wrap);
+  }
+}</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · LRU 缓存（简述思路）</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>图片缩略图内存缓存最多 200 张，超出淘汰最久未用的——数据结构怎么选？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Map</strong> 保持插入顺序：get 时删再 set 移到末尾；超容量删第一个 key。</p>
+              <p>复杂版：哈希表 + 双向链表 O(1) get/put。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 手写 Promise.all / 并发池</h3>
+          </div>
+          <p>完整版见 <a href="promise.html">Promise 手写区</a> 与 <a href="concurrency.html#q5">并发 Q5</a>。</p>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>面试常连环考：先 <code>promiseAll</code>，再 <code>runPool(tasks, 3)</code>。把两者能白板写出来即可。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q11 · 手写 v-permission 权限指令</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>没 <code>bpo:staff:delete</code> 权限时移除删除按钮 DOM——</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function installPermission(app, getPerms) {
+  app.directive('permission', {
+    mounted(el, binding) {
+      const need = binding.value
+      const perms = getPerms()
+      const ok = Array.isArray(need)
+        ? need.some(p =&gt; perms.includes(p))
+        : perms.includes(need)
+      if (!ok) el.remove()
+    }
+  })
+}</code></pre>
+              <p>完整场景见 <a href="vue-router.html#q5">Vue Router Q5</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q12 · 手写配置驱动表格列渲染（简化 ProTable）</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>columns 配置 + slot 自定义列——核心 render 逻辑怎么写？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function renderColumns(columns, slots) {
+  return columns.map(col =&gt; {
+    if (col.slot &amp;&amp; slots[col.slot]) {
+      return { ...col, render: (row) =&gt; slots[col.slot]({ row }) }
+    }
+    return { ...col, render: (row) =&gt; row[col.prop] }
+  })
+}</code></pre>
+              <p>Vue 里用 <code>&lt;template v-for&gt;</code> + 动态 slot 名 <code>#[col.slot]</code> 透传。</p>
+              <p>设计思路见 <a href="components.html#q2">组件封装 Q2</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

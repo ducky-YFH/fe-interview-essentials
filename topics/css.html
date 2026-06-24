@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS 布局 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="css">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>📐 CSS 布局</h1>
+        <p class="subtitle">含实战场景 · 12 题 · 精练 7 项 · 与 <a href="rendering.html">渲染&性能</a> / <a href="miniapp.html">小程序</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 盒模型 content-box vs border-box</li>
+          <li><a href="#q2">Q2</a> BFC 是什么、怎么触发</li>
+          <li><a href="#q3">Q3</a> 外边距折叠</li>
+          <li><a href="#q5">Q5</a> Flex 主轴/交叉轴对齐</li>
+          <li><a href="#q6">Q6</a> 水平垂直居中几种写法</li>
+          <li><a href="#q8">Q8</a> 层叠上下文与 z-index</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、盒模型 &amp; BFC</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 标准盒模型和 IE 盒模型区别？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>全局 <code>* { box-sizing: border-box }</code> 后，设 <code>width: 100%</code> 的输入框不再撑破父容器——为什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>content-box</code>（默认）：width 只含内容，padding/border 额外加宽</li>
+                <li><code>border-box</code>：width 包含 padding + border，更直觉</li>
+              </ul>
+              <p>项目普遍重置为 border-box，避免宽度计算踩坑。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · BFC 是什么？能解决什么问题？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>两栏布局：左侧 float 的图片把右侧文字绕排了，想让右侧形成独立区域——BFC 怎么用？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>BFC（块级格式化上下文）：</strong>独立布局区域，内外互不影响。</p>
+              <p><strong>常见触发：</strong><code>overflow: hidden/auto</code>、<code>display: flow-root</code>、float、absolute、flex/grid 子项等。</p>
+              <p><strong>能解决：</strong></p>
+              <ul>
+                <li>清除内部 float（父高度塌陷：<code>overflow: hidden</code> 或 clearfix）</li>
+                <li>阻止 margin 折叠（见 Q3）</li>
+                <li>自适应两栏（右侧 <code>overflow: hidden</code> 避开 float）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 外边距折叠（margin collapse）是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>上下两个 <code>margin: 20px</code> 的 div，间距不是 40px 而是 20px——原因？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>相邻块级元素<strong>垂直外边距</strong>相遇时取较大值（非相加）。</p>
+              <p><strong>避免：</strong>父元素形成 BFC、用 padding 代替、flex/grid 布局。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q4 · position 几种值区别？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>static</code> 默认，不定位</li>
+                <li><code>relative</code> 相对自身原位置偏移，占位保留</li>
+                <li><code>absolute</code> 相对最近非 static 祖先，脱流</li>
+                <li><code>fixed</code> 相对视口</li>
+                <li><code>sticky</code> 滚动到阈值前 relative，之后 fixed</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、Flex &amp; 居中</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · Flex 主轴 / 交叉轴对齐常用属性？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>工具栏：左 logo、中间搜索、右头像——用 Flex 怎么排？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>.toolbar {
+  display: flex;
+  align-items: center;      /* 交叉轴垂直居中 */
+  justify-content: space-between; /* 主轴两端分布 */
+}
+.search { flex: 1; margin: 0 16px; } /* 中间占满剩余 */</code></pre>
+              <p><strong>记忆：</strong><code>justify-content</code> 管主轴，<code>align-items</code> 管交叉轴；<code>flex: 1</code> 均分剩余空间。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 水平垂直居中至少说 3 种？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>/* 1. Flex（最常用） */
+.parent { display: flex; justify-content: center; align-items: center; }
+
+/* 2. Grid */
+.parent { display: grid; place-items: center; }
+
+/* 3. 绝对定位 + transform */
+.child { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }</code></pre>
+              <p>已知宽高还可用 <code>margin: auto</code> + absolute 四向 0。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · Grid 和 Flex 怎么选？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>Flex</strong>：一维（行或列），内容驱动，导航/工具栏</li>
+                <li><strong>Grid</strong>：二维行列，布局驱动，仪表盘、相册网格</li>
+              </ul>
+              <p>猫咔底片墙：Grid <code>repeat(auto-fill, minmax(120px, 1fr))</code> 自适应列数。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">三、层叠 &amp; 实战</h2>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · z-index 为什么不生效？层叠上下文</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Modal 设了 <code>z-index: 9999</code> 仍被父级里的下拉盖住——可能原因？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><code>z-index</code> 只在<strong>同一层叠上下文</strong>内比较。</p>
+              <p><strong>创建新层叠上下文：</strong>position + z-index、opacity&lt;1、transform、filter、flex 子项等。</p>
+              <p><strong>解法：</strong>Modal 挂到 <code>body</code>（Teleport），脱离父级上下文。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · 移动端 1px 边框、安全区怎么处理？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>1px：伪元素 + transform scaleY(0.5)、border-image</li>
+                <li>安全区：<code>padding-bottom: env(safe-area-inset-bottom)</code></li>
+                <li>小程序 / H5 底部 Tab 适配刘海屏</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · Tailwind 类名方案和传统 CSS 如何取舍？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>猫咔用 Tailwind，BPO 用 Sass 模块——面试怎么评价原子化 CSS？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Tailwind 优点：</strong>快、设计 token 统一、Tree-shaking 未用类、少起名。</p>
+              <p><strong>缺点：</strong>模板类名长、复杂动画/伪元素可读性差。</p>
+              <p><strong>实践：</strong>业务页 Tailwind + 少量组件 scoped CSS；设计系统组件可 <code>@apply</code> 封装。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q11 · SCSS 常用特性？和 CSS Modules 怎么配合？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>BPO 用 Sass 模块化管理变量和 mixin——面试能说出哪些实用特性？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>变量 / 嵌套 / &amp;父选择器</strong></li>
+                <li><strong>mixin</strong>：<code>@include flex-center</code> 复用</li>
+                <li><strong>@use / @forward</strong>（替代 @import，避免重复注入）</li>
+                <li><strong>函数</strong>：颜色 lighten/darken</li>
+              </ul>
+              <p><strong>CSS Modules：</strong>Vue <code>&lt;style module&gt;</code> 生成唯一类名防冲突；SCSS 写逻辑，Modules 管作用域。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q12 · 移动端 rem / vw 适配方案？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>H5 要在 375 设计稿上还原，小程序用 rpx——各怎么换算？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>rem：</strong>根 font-size = 屏幕宽/10（flexible）或 postcss-pxtorem 把设计稿 px 转 rem。</p>
+              <p><strong>vw：</strong><code>1vw = 1% 视口宽</code>，375 设计稿 <code>100vw = 375px</code>，用 postcss-px-to-viewport。</p>
+              <p><strong>小程序 rpx：</strong>750rpx = 屏幕宽，375px 屏上 1rpx = 0.5px。</p>
+              <p><strong>注意：</strong>1px 边框、安全区另处理，见 <a href="#q9">Q9</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

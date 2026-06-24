@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue Router &amp; 权限 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="vue-router">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🛣 Vue Router &amp; 权限</h1>
+        <p class="subtitle">含实战场景 · 8 题 · 精练 6 项 · 与 <a href="vue3.html">Vue3</a> / <a href="http.html">HTTP &amp; 安全</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 导航守卫执行顺序</li>
+          <li><a href="#q2">Q2</a> 动态路由 addRoute</li>
+          <li><a href="#q3">Q3</a> 路由懒加载</li>
+          <li><a href="#q4">Q4</a> 路由级 vs 按钮级权限</li>
+          <li><a href="#q5">Q5</a> v-permission 指令实现</li>
+          <li><a href="#q6">Q6</a> keep-alive + 多标签页</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、Vue Router 核心</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 导航守卫有哪些？完整执行顺序？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>未登录访问 /project/list 要跳登录；已登录但没角色访问 /admin 要 403——守卫放哪？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>顺序（简化）：</strong></p>
+              <ol>
+                <li>导航触发</li>
+                <li>组件内 <code>beforeRouteLeave</code></li>
+                <li>全局 <code>beforeEach</code></li>
+                <li>路由独享 <code>beforeEnter</code></li>
+                <li>组件 <code>beforeRouteEnter</code></li>
+                <li>解析异步组件</li>
+                <li><code>beforeRouteUpdate</code>（同组件参数变）</li>
+                <li>全局 <code>beforeResolve</code></li>
+                <li>导航确认 → <code>afterEach</code></li>
+              </ol>
+              <p><strong>实践：</strong>登录校验放全局 <code>beforeEach</code>；页面标题、进度条放 <code>afterEach</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 动态路由怎么加？Vben Admin 菜单权限常见方案？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>登录后后端返回菜单树和 permission 列表——前端怎么生成可访问路由？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li>登录成功拿 <code>roles</code> / <code>permissions</code> / 菜单 JSON</li>
+                <li>用本地 <code>asyncRoutes</code> 模板 + filter 函数筛出有权限的路由</li>
+                <li><code>router.addRoute()</code> 动态注册（Vue Router 4）</li>
+                <li>生成侧边栏菜单（meta.title、icon、order）</li>
+                <li>404 路由最后 add，捕获未匹配</li>
+              </ol>
+              <pre><code>const accessRoutes = filterAsyncRoutes(asyncRoutes, permissions)
+accessRoutes.forEach(r =&gt; router.addRoute(r))
+router.addRoute({ path: '/:pathMatch(.*)*', redirect: '/404' })</code></pre>
+              <p><strong>注意：</strong>刷新页面需重新拉用户信息再 addRoute；登出 <code>resetRouter()</code> 移除动态路由。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 路由懒加载原理？和代码分割什么关系？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>管理后台 50+ 页面，首屏只想加载 Layout + 首页——怎么配？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>{
+  path: '/project',
+  component: () =&gt; import('@/views/project/index.vue')
+}</code></pre>
+              <p>动态 import 触发 webpack/vite <strong>代码分割</strong>，每个路由对应独立 chunk，访问时才下载。</p>
+              <p><strong>优化：</strong>相关页面可合并 chunk（webpack magic comment <code>webpackChunkName</code>）；预加载 hover 菜单项 <code>router.resolve + import()</code>。</p>
+              <p>见 <a href="engineering.html#q4">工程化 Q4</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 路由级权限和按钮级权限区别？前端权限能防黑客吗？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>角色 A 能进人员列表但不能点「删除」；角色 B 连菜单都看不到——两层怎么配合？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead><tr><th>层级</th><th>控制什么</th><th>实现</th></tr></thead>
+                <tbody>
+                  <tr><td>路由级</td><td>页面能否进入</td><td>动态路由 + meta.roles</td></tr>
+                  <tr><td>按钮级</td><td>操作入口是否展示</td><td>v-permission / 权限函数</td></tr>
+                  <tr><td>接口级</td><td>真正能否执行</td><td><strong>后端鉴权</strong>（必须）</td></tr>
+                </tbody>
+              </table>
+              <p><strong>结论：</strong>前端权限只为 UX（隐藏入口、减少误操作），<strong>不能替代后端</strong>。绕过前端直接调 API 仍须 403。</p>
+              <p>401/403 见 <a href="http.html#q2">HTTP Q2</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、权限实现 &amp; 多标签</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · v-permission 指令怎么实现？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p><code>&lt;el-button v-permission="'bpo:staff:delete'"&gt;</code> 没权限时 DOM 怎么处理？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function hasPermission(codes: string | string[]) {
+  const perms = useUserStore().permissions
+  const list = Array.isArray(codes) ? codes : [codes]
+  return list.some(c =&gt; perms.includes(c))
+}
+
+app.directive('permission', {
+  mounted(el, binding) {
+    if (!hasPermission(binding.value)) {
+      el.parentNode?.removeChild(el) // 或 el.style.display = 'none'
+    }
+  }
+})</code></pre>
+              <p><strong>变体：</strong>支持 <code>v-permission:all</code>（需全部满足）；权限变更时 watch store 重新校验。</p>
+              <p>手写版见 <a href="handwrite.html#q11">手写 Q11</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 多标签页 + keep-alive + 路由怎么配合？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>BPO 平台开多个考勤表单标签，切换保留填写状态，最多缓存 10 个——完整方案？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>tabsStore 维护 <code>{ path, title, name }</code> 列表</li>
+                <li><code>keep-alive :include="cachedNames" :max="10"</code></li>
+                <li>组件 <code>defineOptions({ name: 'StaffForm' })</code> 与 include 匹配</li>
+                <li>关闭标签从 include 移除，触发 unmount</li>
+                <li><code>router-view</code> 的 key 用 fullPath 区分同组件不同参数</li>
+              </ul>
+              <p>详见 <a href="vue3.html#q10">Vue3 Q10</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · 路由传参：query / params / props 怎么选？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>项目详情页要带 projectId，列表页筛选条件要可分享链接——用 params 还是 query？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead><tr><th>方式</th><th>特点</th><th>场景</th></tr></thead>
+                <tbody>
+                  <tr><td>query</td><td>显式在 URL ?a=1，刷新保留</td><td>筛选、分页、可分享</td></tr>
+                  <tr><td>params（path）</td><td>/user/:id 路径段</td><td>RESTful 资源 id</td></tr>
+                  <tr><td>props</td><td>路由映射为组件 props</td><td>解耦 route 对象</td></tr>
+                  <tr><td>state（history）</td><td>刷新可能丢</td><td>临时大对象（慎用）</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 企业微信 OAuth2 单点登录和路由怎么衔接？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>BPO 从企微工作台点进来，URL 带 code——前端路由守卫怎么处理？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li>白名单路由 <code>/oauth/callback</code> 解析 code</li>
+                <li>调后端换 token，写入 store</li>
+                <li>拉用户权限 → 动态 addRoute</li>
+                <li><code>next(redirect || '/')</code> 进业务页</li>
+              </ol>
+              <p>OAuth2 + JWT 见 <a href="http.html#q5">HTTP Q5</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

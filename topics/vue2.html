@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue2 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="vue2">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>💚 Vue2</h1>
+        <p class="subtitle">含实战场景 · 6 题 · 精练 5 项 · 与 <a href="vue3.html">Vue3</a> / <a href="components.html">组件封装</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题 · BPO 项目口述重点</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 响应式 defineProperty 局限</li>
+          <li><a href="#q2">Q2</a> Vue.set 和数组更新</li>
+          <li><a href="#q3">Q3</a> Options API 生命周期</li>
+          <li><a href="#q4">Q4</a> Vuex 核心概念</li>
+          <li><a href="#q5">Q5</a> mixin 问题与替代</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">Vue2 核心</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · Vue2 响应式原理？和 Vue3 Proxy 比缺什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>BPO 表单动态加字段 <code>this.form.extra = {}</code> 视图不更新——为什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>Vue2 用 <code>Object.defineProperty</code> 递归劫持已有属性 get/set，依赖收集 + 派发更新。</p>
+              <p><strong>局限：</strong></p>
+              <ul>
+                <li>新增/删除属性检测不到 → <code>Vue.set / this.$set</code></li>
+                <li>数组下标/length 需 hack（重写 push 等方法）</li>
+                <li>初始化时要递归遍历，大对象有成本</li>
+              </ul>
+              <p>Vue3 Proxy 对比见 <a href="vue3.html#q2">Vue3 Q2</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · Vue.set 什么时候必须用？数组哪些写法不触发更新？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p><code>this.list[0] = newItem</code> 和 <code>this.list.splice(0, 1, newItem)</code> 哪个可靠？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>对象：</strong><code>this.$set(this.obj, 'newKey', val)</code></p>
+              <p><strong>数组：</strong>用变更方法 <code>push/pop/splice/sort...</code> 或 <code>$set(arr, index, val)</code></p>
+              <p><strong>不触发更新：</strong>直接索引赋值 <code>arr[i]=x</code>、改 length。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · Vue2 生命周期顺序？和 Vue3 Composition 怎么对应？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>created 里调接口还是 mounted？beforeDestroy 要清什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>顺序：</strong>beforeCreate → created → beforeMount → mounted → beforeUpdate → updated → beforeDestroy → destroyed</p>
+              <table>
+                <thead><tr><th>Vue2</th><th>Vue3 Composition</th><th>典型用途</th></tr></thead>
+                <tbody>
+                  <tr><td>created</td><td>setup()</td><td>调 API、初始化数据</td></tr>
+                  <tr><td>mounted</td><td>onMounted</td><td>DOM 操作、ECharts init</td></tr>
+                  <tr><td>beforeDestroy</td><td>onUnmounted</td><td>清定时器、dispose 图表</td></tr>
+                  <tr><td>activated</td><td>onActivated</td><td>keep-alive 恢复</td></tr>
+                </tbody>
+              </table>
+              <p>created 无 DOM；需要 $el 的操作放 mounted。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · Vuex 有哪些核心概念？mapState 怎么用？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>BPO 全局用户信息和权限在 Vuex——组件里怎么优雅取值和提交 mutation？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>五件套：</strong>state、getters、mutations（同步）、actions（异步）、modules</p>
+              <pre><code>...mapState(['user']),
+...mapGetters(['permissions']),
+...mapActions(['fetchUser'])</code></pre>
+              <p><strong>规范：</strong>改 state 只走 mutation；异步在 action 里 commit。</p>
+              <p>Pinia 对比见 <a href="vue3.html#q7">Vue3 Q7</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · mixin 有什么问题？Vue2 项目里你怎么替代？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>多个页面 mixin 了同一个 logMixin，data 重名、钩子顺序难排查——</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>mixin 问题：</strong>命名冲突、来源不透明、多 mixin 钩子合并顺序难维护。</p>
+              <p><strong>替代：</strong></p>
+              <ul>
+                <li>Vue2.7+ / Vue3：<code>composables</code></li>
+                <li>高阶组件 / 插槽</li>
+                <li>Vuex module 共享状态</li>
+              </ul>
+              <p>原型链与 mixin 见 <a href="prototype.html#q10">原型链 Q10</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · Vue2 组件通信全集？eventBus 为何不推荐？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>兄弟组件传值：props 钻太深，以前用 eventBus——现在怎么改？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>props / $emit</li>
+                <li>$parent / $children（少用）</li>
+                <li>provide / inject</li>
+                <li>Vuex</li>
+                <li>eventBus（Vue 实例作中介）→ 难追踪，Vue3 已移除，用 mitt + 明确订阅释放</li>
+              </ul>
+              <p>Vue3 通信用法见 <a href="vue3.html#q9">Vue3 Q9</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

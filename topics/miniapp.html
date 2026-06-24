@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>小程序 &amp; UniApp · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="miniapp">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>📱 小程序 &amp; UniApp</h1>
+        <p class="subtitle">含实战场景 · 10 题 · 精练 6 项 · 与 <a href="vue3.html">Vue3</a> / <a href="upload.html">文件上传</a> / <a href="rendering.html">渲染&性能</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 双线程模型 &amp; setData</li>
+          <li><a href="#q2">Q2</a> 页面 / 组件生命周期</li>
+          <li><a href="#q3">Q3</a> 登录授权流程</li>
+          <li><a href="#q5">Q5</a> 支付流程</li>
+          <li><a href="#q7">Q7</a> 长列表 &amp; 性能优化</li>
+          <li><a href="#q8">Q8</a> Canvas 涂鸦实现要点</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、架构 &amp; 生命周期</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 小程序双线程模型是什么？setData 为什么慢？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>选片列表一次 setData 传 500 张图片元信息，页面卡 2 秒——根因和优化方向？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>双线程：</strong></p>
+              <ul>
+                <li><strong>逻辑层</strong>（JSCore）：跑 JS，调 setData</li>
+                <li><strong>渲染层</strong>（WebView）：跑 WXML/WXSS，负责 DOM</li>
+                <li>两层通过 Native 桥通信，<strong>setData 要序列化 + 跨线程传输 + diff 渲染</strong></li>
+              </ul>
+              <p><strong>setData 慢的原因：</strong>数据量大、频率高、深层路径多、同时触发大量节点更新。</p>
+              <p><strong>优化：</strong></p>
+              <ul>
+                <li>只传变化字段，避免整表替换</li>
+                <li>合并多次 setData（下一帧统一更新）</li>
+                <li>分页 / 虚拟列表，控制 WXML 节点数</li>
+                <li>非视图数据放普通变量，不进 data</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 页面和组件生命周期顺序？和 Vue 怎么对应？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>从订单页返回选片页要刷新列表但不丢滚动位置——该用 onShow 还是 onLoad？组件里呢？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>页面：</strong><code>onLoad → onShow → onReady → onHide → onUnload</code></p>
+              <p><strong>组件：</strong><code>created → attached → ready → detached</code></p>
+              <table>
+                <thead><tr><th>场景</th><th>用哪个</th></tr></thead>
+                <tbody>
+                  <tr><td>首次进页拉详情</td><td>onLoad（读 query）</td></tr>
+                  <tr><td>从子页返回刷新</td><td>onShow</td></tr>
+                  <tr><td>DOM 就绪后测尺寸 / 初始化 Canvas</td><td>onReady / ready</td></tr>
+                  <tr><td>页面销毁清定时器</td><td>onUnload / detached</td></tr>
+                </tbody>
+              </table>
+              <p><strong>UniApp：</strong>统一为 Vue 生命周期 + 页面级 onLoad/onShow 等，条件编译处理平台差异。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 小程序登录授权流程？token 怎么存？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>猫咔小程序：用户打开要先登录，后续请求带 token——标准流程和注意点？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li><code>wx.login()</code> 拿临时 <code>code</code>（5 分钟有效）</li>
+                <li>前端把 code 发后端，后端调微信 <code>code2Session</code> 换 <code>openid</code> + <code>session_key</code></li>
+                <li>后端签发业务 JWT / 自定义 token 返回前端</li>
+                <li>前端存 <code>storage</code>，请求头携带</li>
+              </ol>
+              <p><strong>注意：</strong></p>
+              <ul>
+                <li><code>session_key</code> 不能下发前端</li>
+                <li>用户信息获取需 <code>getUserProfile</code> / 头像昵称填写能力（政策常变）</li>
+                <li>token 过期走静默 login 或引导重新授权</li>
+                <li>与 Web JWT 拦截器思路一致，见 <a href="http.html#q5">HTTP Q5</a></li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q4 · UniApp 条件编译和多端差异怎么处理？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>同一套代码要跑微信小程序和 H5，支付、分享、文件 API 各端不同——怎么组织？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>// #ifdef MP-WEIXIN
+wx.requestPayment({ ... })
+// #endif
+// #ifdef H5
+// 跳转 H5 收银台
+// #endif</code></pre>
+              <p><strong>最佳实践：</strong></p>
+              <ul>
+                <li>业务逻辑放 composables，平台能力走 <code>adapter</code> 接口</li>
+                <li>差异大的模块按平台分包，避免主包过大</li>
+                <li>样式用 rpx + 安全区变量；H5 注意 rem 基准</li>
+                <li>API 统一封装 <code>uni.request</code>，内部处理 header / 错误码</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、支付 &amp; 消息</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 微信小程序支付流程？前端职责边界？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>客户选片后下单支付——前端要调哪些 API？哪些参数绝不能前端自己算？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li>前端创建订单 → 后端调微信统一下单 API</li>
+                <li>后端返回支付参数（timeStamp、nonceStr、package、signType、paySign）</li>
+                <li>前端 <code>wx.requestPayment</code> 唤起收银台</li>
+                <li>结果以<strong>后端回调 + 主动查单</strong>为准，前端 success 只作 UI 提示</li>
+              </ol>
+              <p><strong>边界：</strong>商户密钥、签名、金额校验全在后端；前端防重复点击、展示 loading、失败重试查单。</p>
+              <p>幂等设计见 <a href="http.html#q1">HTTP Q1</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · 订阅消息怎么用？和模板消息区别？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>精修完成要通知客户——怎么让用户授权订阅并在后端触发推送？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>流程：</strong></p>
+              <ol>
+                <li>用户触发场景时调 <code>wx.requestSubscribeMessage</code>，选模板 id</li>
+                <li>用户同意后，后端在业务发生时调「发送订阅消息」接口</li>
+                <li>一次授权通常对应一次发送（长期订阅需特定类目）</li>
+              </ol>
+              <p><strong>注意：</strong>不能强制授权；拒绝后要有站内信 / IM 等兜底；模板内容需微信审核。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">三、性能 &amp; Canvas</h2>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q7 · 小程序长列表、大量图片怎么优化？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>猫咔小程序：3000 张选片缩略图 + IM 聊天长历史——你用了 z-paging、懒加载，还能说哪些？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>分页加载</strong>：z-paging / 自研上拉加载，控制单次 setData 量</li>
+                <li><strong>图片</strong>：缩略图 CDN、lazy-load、webp、占位图</li>
+                <li><strong>虚拟列表</strong>：只渲染视口节点（recycle-view / 自定义）</li>
+                <li><strong>分包</strong>：主包 &lt; 2M，非首屏功能 subPackages</li>
+                <li><strong>预加载</strong>：<code>preloadRule</code> 提前下载分包</li>
+                <li><strong>缓存</strong>：列表数据内存缓存 + 返回页 onShow 增量刷新</li>
+                <li><strong>避免</strong>：wxml 深层嵌套、频繁 bindtap 里 setData 整表</li>
+              </ul>
+              <p>Web 侧虚拟列表见 <a href="rendering.html#q9">渲染 Q9</a>、<a href="vue3.html#q11">Vue3 Q11</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · Canvas 图片涂鸦：坐标、缩放、合成怎么做？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>自研 Canvas 工具：网络图本地化、双指缩放、画笔、撤销重做、合成保存——关键技术点？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>基础：</strong></p>
+              <ul>
+                <li>网络图先 <code>downloadFile</code> 或 <code>getImageInfo</code> 转本地路径（避免 canvas 跨域 taint）</li>
+                <li>高清屏：<code>canvas.width = cssWidth * dpr</code>，<code>ctx.scale(dpr, dpr)</code></li>
+                <li>双指缩放：记录 pinch 中心、scale 矩阵变换， redraw 底图 + 笔迹层</li>
+              </ul>
+              <p><strong>笔迹：</strong>touchstart/move/end 采样点，quadraticCurveTo 平滑；笔迹存数组支持 undo/redo。</p>
+              <p><strong>合成：</strong><code>drawImage</code> 底图 → 叠加路径 → <code>canvasToTempFilePath</code> 导出。</p>
+              <p><strong>性能：</strong>离屏 canvas 缓存静态层；拖动时只重绘笔迹层；限制导出分辨率。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · 小程序包体积怎么控？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>主包超限审核不过——从依赖、资源、代码三侧怎么瘦身？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>分包 + 独立分包；按需注入 <code>lazyCodeLoading</code></li>
+                <li>图片走 CDN，本地只留 icon</li>
+                <li>清理无用组件 / 插件；moment → dayjs</li>
+                <li>开发阶段用「代码依赖分析」找大文件</li>
+                <li>uni_modules 只引用到的组件</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 小程序和 Web 共用 Monorepo 怎么拆？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>shared-api、shared-types 三端复用，但小程序不能直接用 axios / DOM API——边界在哪？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>可共享：</strong>纯 TS 类型、枚举、工具函数、业务状态机、错误码映射</li>
+                <li><strong>需适配：</strong>HTTP 客户端（uni.request vs axios）、存储、文件、支付</li>
+                <li><strong>不可共享：</strong>直接操作 window/document 的代码、Electron IPC</li>
+                <li>用 <code>shared-api</code> 定义接口 + 各端 adapter 注入 transport</li>
+              </ul>
+              <p>Monorepo 结构见 <a href="vue3.html#q12">Vue3 Q12</a>、<a href="engineering.html#q6">工程化 Q6</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

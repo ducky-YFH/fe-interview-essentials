@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>this 指向 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="this">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🎯 this 指向</h1>
+        <p class="subtitle">含实战场景 · 10 题 · 精练 6 项 · 与 <a href="arrow.html">箭头函数</a> / <a href="prototype.html">原型链</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 四种绑定规则 + 优先级</li>
+          <li><a href="#q3">Q3</a> 隐式绑定丢失（回调传方法）</li>
+          <li><a href="#q4">Q4</a> call / apply / bind</li>
+          <li><a href="#q5">Q5</a> new 绑定</li>
+          <li><a href="#q6">Q6</a> 箭头函数 vs 普通函数</li>
+          <li><a href="#q9">Q9</a> DOM / React 事件 this 丢失</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、四种绑定 ── -->
+      <section class="section">
+        <h2 class="section-title">一、四种绑定规则</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · this 怎么确定？四种规则 + 优先级</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              面试常问：「你说一下 this 指向」。要能快速讲清四种情况，
+              并知道 <code>new</code> 和 <code>bind</code> 谁优先。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>规则</th><th>条件</th><th>this 指向</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>1. 默认绑定</strong></td>
+                    <td>独立函数调用 <code>fn()</code></td>
+                    <td>非严格模式 → 全局对象；严格模式 → <code>undefined</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>2. 隐式绑定</strong></td>
+                    <td><code>obj.fn()</code>，调用点在前面的对象</td>
+                    <td><code>obj</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>3. 显式绑定</strong></td>
+                    <td><code>fn.call(obj)</code> / <code>apply</code> / <code>bind</code></td>
+                    <td>传入的第一个参数（绑定对象）</td>
+                  </tr>
+                  <tr>
+                    <td><strong>4. new 绑定</strong></td>
+                    <td><code>new Fn()</code></td>
+                    <td>新创建的实例对象</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>优先级（高 → 低）：</strong></p>
+              <pre>new 绑定 &gt; 显式 bind &gt; 隐式绑定 &gt; 默认绑定</pre>
+              <p><strong>例外：</strong>箭头函数<strong>没有自己的 this</strong>，捕获定义时的外层 this，不适用以上四条（见 Q6）。</p>
+              <p><strong>面试口述模板：</strong>「看调用方式：谁点出来的、call 传了谁、是不是 new；箭头函数看定义位置。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q2 · 默认绑定：独立调用输出什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              工具函数 <code>log()</code> 里打了 <code>this</code>，在模块顶层直接
+              <code>log()</code> 和在对象里 <code>obj.log()</code> 行为不同——为什么？
+            </p>
+          </div>
+          <pre><code data-runnable>function log() {
+  'use strict';
+  console.log('strict this:', this);
+}
+
+log();
+
+const obj = { name: 'app', log };
+obj.log();</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出（浏览器）：</strong></p>
+              <ul>
+                <li><code>log()</code> 严格模式 → <code>strict this: undefined</code></li>
+                <li><code>obj.log()</code> → 隐式绑定，<code>this</code> 为 <code>obj</code> 对象</li>
+              </ul>
+              <p><strong>非严格模式</strong>独立调用时 <code>this</code> 为 <code>window</code>（浏览器）或 <code>global</code>（Node）。</p>
+              <p>现代工程多开严格模式 / 模块自动严格，独立调用 <code>this</code> 为 <code>undefined</code> 很常见。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、隐式丢失 ── -->
+      <section class="section">
+        <h2 class="section-title">二、隐式绑定丢失（高频坑）</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 把方法当回调传，this 为什么丢了？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用户对象有 <code>user.getName()</code>，你把 <code>user.getName</code>
+              传给 <code>Array.prototype.map</code> 或 <code>setTimeout</code>，
+              结果 <code>this.name</code> 报错或变成 <code>undefined</code>。
+            </p>
+          </div>
+          <pre><code data-runnable>const user = {
+  name: 'Alice',
+  getName() {
+    return this.name;
+  },
+};
+
+console.log('direct:', user.getName());
+
+const fn = user.getName;
+try {
+  console.log('assigned:', fn());
+} catch (e) {
+  console.log('assigned error:', e.message);
+}
+
+console.log('map:', [user].map(user.getName));</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong>判断 this 看<strong>调用点</strong>，不是定义位置。</p>
+              <ul>
+                <li><code>user.getName()</code> → 隐式绑定，this 是 user ✅</li>
+                <li><code>const fn = user.getName; fn()</code> → 独立调用，默认绑定，严格模式 this 为 undefined ❌</li>
+                <li><code>map(user.getName)</code> → 由 map 内部调用，this 可能是 undefined 或数组相关对象 ❌</li>
+              </ul>
+              <p><strong>修复：</strong></p>
+              <pre><code>// 1. 箭头包装
+items.map(() =&gt; user.getName());
+
+// 2. bind
+setTimeout(user.getName.bind(user), 0);
+
+// 3. 显式 call（立即调用时）
+user.getName.call(user);</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · call / apply / bind 区别与使用场景</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <ul>
+              <li>A. 借用数组方法处理类数组 <code>arguments</code></li>
+              <li>B. 继承时调用父构造函数 <code>Parent.call(this, args)</code></li>
+              <li>C. 事件回调要固定组件实例 this</li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>方法</th><th>行为</th><th>参数</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>call</code></td>
+                    <td>立即调用，指定 this</td>
+                    <td>参数列表逐个传</td>
+                  </tr>
+                  <tr>
+                    <td><code>apply</code></td>
+                    <td>立即调用，指定 this</td>
+                    <td>参数数组</td>
+                  </tr>
+                  <tr>
+                    <td><code>bind</code></td>
+                    <td>返回<strong>新函数</strong>，不立即调用</td>
+                    <td>可预设 this + 部分参数</td>
+                  </tr>
+                </tbody>
+              </table>
+              <pre><code>// A. 借用
+const args = Array.prototype.slice.call(arguments);
+
+// B. 继承（ES5）
+function Child() {
+  Parent.call(this, name);
+}
+
+// C. 固定 this
+button.addEventListener('click', this.handleClick.bind(this));</code></pre>
+              <p><strong>记忆：</strong>要立即执行用 call/apply；要传给别处稍后执行用 bind。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、new & 箭头 ── -->
+      <section class="section">
+        <h2 class="section-title">三、new 绑定 &amp; 箭头函数</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · new 调用时 this 是谁？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用构造函数 <code>new User('Tom')</code> 创建实例，
+              构造函数里的 <code>this.name = name</code> 中的 this 指向哪里？
+              若构造函数 return 了普通对象会怎样？
+            </p>
+          </div>
+          <pre><code data-runnable>function User(name) {
+  this.name = name;
+  // return { hijack: true }; // 取消注释试试
+}
+
+const u = new User('Tom');
+console.log(u.name);
+console.log(u instanceof User);</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>new 时 this</strong> = 新创建的空对象（已链上 <code>Fn.prototype</code>）。</p>
+              <p><strong>return 规则：</strong></p>
+              <ul>
+                <li>return 基本类型 / 无 return → 返回新对象 <code>u</code></li>
+                <li>return 对象 → 用该对象替换默认返回值（<code>hijack</code> 对象）</li>
+              </ul>
+              <p>与 <a href="prototype.html#q5">原型链 Q5</a> 的 <code>myNew</code> 手写题联动记忆。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 箭头函数的 this 能用 call 改吗？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              对象字面量里写 <code>arrow: () =&gt; this.x</code> 想访问对象属性，
+              却发现 <code>this</code> 不是对象本身——和类里写普通方法有何不同？
+            </p>
+          </div>
+          <pre><code data-runnable>const obj = {
+  x: 10,
+  regular() {
+    return this.x;
+  },
+  arrow: () =&gt; this.x,
+};
+
+console.log('regular:', obj.regular());
+
+const bound = obj.arrow.bind(obj);
+console.log('arrow:', obj.arrow(), 'bound:', bound());</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>结论：</strong></p>
+              <ul>
+                <li><code>regular()</code> → 隐式绑定，返回 <code>10</code></li>
+                <li><code>arrow</code> 捕获<strong>定义时外层</strong> this（浏览器全局或 undefined），<strong>bind/call 无效</strong></li>
+              </ul>
+              <p><strong>项目规则：</strong></p>
+              <ul>
+                <li>对象方法需要 <code>this</code> 指对象 → 用普通方法 / 简写 <code>method() {}</code></li>
+                <li>回调要捕获外层 this（如 React 类组件）→ 箭头函数或 bind</li>
+              </ul>
+              <p>更多输出题见 <a href="arrow.html">箭头函数专题</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、经典输出 ── -->
+      <section class="section">
+        <h2 class="section-title">四、经典输出题</h2>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · 多层对象 + 赋值输出</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>嵌套对象把内层方法赋给变量再调用——考察隐式绑定与引用传递。</p>
+          </div>
+          <pre><code data-runnable>var name = 'global';
+
+const a = {
+  name: 'a',
+  func() {
+    console.log(this.name);
+  },
+};
+
+const b = { name: 'b' };
+b.func = a.func;
+b.func();
+
+(a.func)();</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong><code>b</code>，然后 <code>a</code></p>
+              <ul>
+                <li><code>b.func()</code> → 调用点是 b，this 是 b</li>
+                <li><code>(a.func)()</code> → 括号不改变调用点，仍是 <code>a.func()</code>，this 是 a</li>
+              </ul>
+              <p><strong>坑：</strong>以为 <code>func</code> 从 a 来就指向 a——错，只看谁调用。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 手写 myBind（简化版）</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>面试追问：「bind 原理是什么？」——能写简化版即可，注意 new 调用时 this 要指向实例。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>Function.prototype.myBind = function (context, ...preset) {
+  const fn = this;
+  return function bound(...args) {
+    // new 调用时不能强行绑 context
+    const isNew = this instanceof bound;
+    return fn.apply(
+      isNew ? this : context,
+      preset.concat(args)
+    );
+  };
+};</code></pre>
+              <p><strong>要点：</strong></p>
+              <ul>
+                <li>返回新函数，延迟执行</li>
+                <li>支持预设参数（偏函数）</li>
+                <li><code>new bound()</code> 时忽略 bind 的 context，this 指向新实例</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 五、项目实战 ── -->
+      <section class="section">
+        <h2 class="section-title">五、项目实战</h2>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q9 · DOM 事件 / React 类组件 this 丢失</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>// React 类组件（简化）
+class Page extends React.Component {
+  state = { count: 0 };
+
+  handleClick() {
+    this.setState({ count: this.state.count + 1 });
+  }
+
+  render() {
+    return &lt;button onClick={this.handleClick}&gt;+1&lt;/button&gt;;
+  }
+}</code></pre>
+            <p>点击按钮报错 <code>Cannot read properties of undefined (reading 'setState')</code>——为什么？几种修法？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong><code>onClick={this.handleClick}</code> 把方法当值传递，点击时独立调用，this 丢失（严格模式为 undefined）。</p>
+              <p><strong>修法（任选）：</strong></p>
+              <ol>
+                <li>构造函数里 <code>this.handleClick = this.handleClick.bind(this)</code></li>
+                <li>类字段箭头函数 <code>handleClick = () =&gt; { this.setState(...) }</code></li>
+                <li>内联箭头 <code>onClick={() =&gt; this.handleClick()}</code>（每次 render 新函数，注意性能）</li>
+              </ol>
+              <p><strong>原生 DOM：</strong></p>
+              <pre><code>btn.addEventListener('click', this.handleClick.bind(this));
+// 或
+btn.addEventListener('click', () =&gt; this.handleClick());</code></pre>
+              <p><strong>Vue 2：</strong>methods 里不要用箭头函数定义方法，否则 this 不是组件实例。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · setInterval / 定时器里 this 错了怎么改？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>const counter = {
+  count: 0,
+  run() {
+    setInterval(function () {
+      this.count++;
+      console.log(this.count);
+    }, 100);
+  },
+};
+counter.run(); // NaN 或报错</code></pre>
+            <p>倒计时组件里 <code>this.count</code> 一直 NaN——一行怎么修？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong><code>setInterval</code> 回调是独立函数调用，默认绑定，this 不是 counter。</p>
+              <p><strong>修法：</strong></p>
+              <pre><code>// 1. 箭头函数（推荐）
+setInterval(() =&gt; {
+  this.count++;
+  console.log(this.count);
+}, 100);
+
+// 2. bind
+setInterval(function () {
+  this.count++;
+}.bind(this), 100);
+
+// 3. 存 self（老写法）
+const self = this;
+setInterval(function () {
+  self.count++;
+}, 100);</code></pre>
+              <p>同 <a href="arrow.html#q16">箭头函数 Q16</a>，这里从 this 四规则角度理解。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

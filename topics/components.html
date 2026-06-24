@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>组件封装 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="components">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🧱 组件封装</h1>
+        <p class="subtitle">含实战场景 · 8 题 · 精练 6 项 · 与 <a href="vue3.html">Vue3</a> / <a href="vue2.html">Vue2</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 配置驱动 vs 插槽</li>
+          <li><a href="#q2">Q2</a> el-table 配置化封装</li>
+          <li><a href="#q3">Q3</a> 通用弹窗设计</li>
+          <li><a href="#q4">Q4</a> 多条件查询组件</li>
+          <li><a href="#q5">Q5</a> 文件预览组件</li>
+          <li><a href="#q6">Q6</a> UI 库按需引入</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、封装思路</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 业务组件封装：配置驱动、插槽、render 怎么选？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>表格有的列要自定义渲染（状态标签、操作按钮），有的纯文本——抽象边界放哪？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead><tr><th>方式</th><th>适用</th><th>缺点</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>配置驱动</strong></td><td>80% 标准列、统一行为</td><td>极端定制难表达</td></tr>
+                  <tr><td><strong>插槽 scoped slot</strong></td><td>列级自定义 cell</td><td>模板略长</td></tr>
+                  <tr><td><strong>render / h()</strong></td><td>JSX 项目、动态列</td><td>可读性看团队习惯</td></tr>
+                </tbody>
+              </table>
+              <p><strong>原则：</strong>80% 配置 + 20% 插槽 escape hatch；不要把所有业务逻辑塞进通用组件。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 如何把 el-table 改成配置式？要支持哪些能力？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>BPO 平台 30+ 列表页，列定义、分页、loading 重复——你的 ProTable 封装了啥？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>const columns = [
+  { prop: 'name', label: '姓名', minWidth: 120 },
+  { prop: 'status', label: '状态', slot: 'status' },
+  { prop: 'action', label: '操作', fixed: 'right', width: 160 }
+]</code></pre>
+              <p><strong>封装能力清单：</strong></p>
+              <ul>
+                <li>动态列渲染、列显隐、本地持久化列配置</li>
+                <li>分页联动（page/size/total → emit fetch）</li>
+                <li>loading、empty、selection 多选</li>
+                <li>固定列、全屏、密度切换</li>
+                <li>scoped slot 透传 <code>#status="{ row }"</code></li>
+              </ul>
+              <p><strong>数据流：</strong>父传 <code>columns + requestApi</code>，或受控 <code>:data + @page-change</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 通用弹窗组件：拖拽、嵌套表单、动态尺寸怎么设计？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>业务弹窗有的 400px 表单，有的 90% 屏文件预览，还要能拖、吸边——API 怎么定？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>&lt;BaseDialog
+  v-model:open="visible"
+  title="编辑人员"
+  width="520px"
+  draggable
+  :loading="submitting"
+  @ok="handleSubmit"
+&gt;
+  &lt;StaffForm ref="formRef" /&gt;
+&lt;/BaseDialog&gt;</code></pre>
+              <p><strong>要点：</strong></p>
+              <ul>
+                <li><code>v-model:open</code> 控制显隐；destroyOnClose 防状态残留</li>
+                <li>拖拽：mousedown title 区 → 更新 transform，边界 clamp</li>
+                <li>内容区 <code>max-height + overflow-y: auto</code> 独立滚动</li>
+                <li>嵌套弹窗 z-index 栈管理；Esc 只关最上层</li>
+                <li>ok 前调子表单 validate()</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 响应式多条件查询组件怎么设计？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>考勤筛选 8 个字段，1366 屏要自动换行，超出 2 行收起——实现思路？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>配置数组 <code>searchSchema</code>：component、field、label、props</li>
+                <li>Flex + wrap + gap，每项 min-width</li>
+                <li>ResizeObserver 测高度，超阈值显示「展开/收起」</li>
+                <li>统一 <code>v-model:model</code> 或 provide 表单上下文</li>
+                <li>查询 / 重置 emit；重置恢复 defaultValues</li>
+              </ul>
+              <p>类似 Vben Form、FormCreate 的 schema 驱动思想。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、预览 &amp; 工程化</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 多格式文件预览组件架构？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>合同归档要预览 PDF、Word、Excel、图片、视频——一个组件怎么分发？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>FilePreview(url, mime)
+  ├── ImageViewer（缩放旋转）
+  ├── PdfViewer（pdf.js / 浏览器 embed）
+  ├── OfficeViewer（微软在线预览 / 后端转 PDF）
+  ├── VideoPlayer
+  └── Fallback（下载链接）</code></pre>
+              <p><strong>优化：</strong>大 PDF 分页渲染；图片懒加载；预览 URL 用短期签名；错误态 + 重试。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · Element / Ant Design Vue 按需引入怎么做？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>全量 import ElementUI 打包 2MB+——如何按需？Vite 和 Webpack 有何不同？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>手动：</strong><code>import { ElButton } from 'element-plus'</code> + 样式按需</li>
+                <li><strong>自动：</strong><code>unplugin-vue-components</code> + <code>unplugin-auto-import</code> 解析模板标签</li>
+                <li><strong>Webpack：</strong><code>babel-plugin-import</code>（Element UI 时代）</li>
+                <li>图标单独 tree-shake：<code>@element-plus/icons-vue</code></li>
+              </ul>
+              <p>见 <a href="engineering.html#q11">工程化 Q11</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · 表单组件封装：受控 vs 非受控？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>封装 <code>StaffSelect</code> 给多个页面用——v-model 和内部缓存选项列表怎么平衡？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>受控：</strong>父传 <code>modelValue</code> + <code>@update:modelValue</code>，单一数据源。</p>
+              <p><strong>非受控：</strong>内部 state + 初次 defaultValue，适合简单场景。</p>
+              <p><strong>实践：</strong>业务组件默认受控；远程搜索 options 可内部缓存，value 仍受控；复杂表单用 Form 统一托管。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · 二次封装组件如何做版本兼容和文档？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>团队 5 人共用 ProTable，有人直接改内部实现导致升级困难——怎么治理？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>对外只暴露 props / events / slots 文档（Storybook / VitePress）</li>
+                <li>Breaking change 走 changelog + codemod</li>
+                <li>内部依赖 UI 库版本锁在 peerDependencies</li>
+                <li>Monorepo 独立 <code>packages/ui</code> 发包或 workspace 引用</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

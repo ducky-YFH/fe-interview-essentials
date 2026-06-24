@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>工程化 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="engineering">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>⚙️ 工程化</h1>
+        <p class="subtitle">含实战场景 · 11 题 · 精练 6 项 · 与 <a href="cache.html">浏览器缓存</a> / <a href="components.html">组件封装</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> Vite vs Webpack 核心差异</li>
+          <li><a href="#q2">Q2</a> 开发时浏览器怎么加载模块</li>
+          <li><a href="#q3">Q3</a> 生产构建做了哪些事</li>
+          <li><a href="#q4">Q4</a> 代码分割与懒加载</li>
+          <li><a href="#q6">Q6</a> Monorepo / pnpm workspace</li>
+          <li><a href="#q8">Q8</a> 环境变量与多环境配置</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、构建工具</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · Vite 和 Webpack 本质区别？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>猫咔新项目用 Vite，老 BPO 用 Webpack——面试问为什么 Vue3 生态更常选 Vite？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead><tr><th></th><th>Vite</th><th>Webpack</th></tr></thead>
+                <tbody>
+                  <tr><td>开发启动</td><td>原生 ESM，按需编译</td><td>先打包再启动 dev server</td></tr>
+                  <tr><td>热更新</td><td>精确 HMR，快</td><td>全量/模块链，大项目慢</td></tr>
+                  <tr><td>生产构建</td><td>底层 Rollup</td><td>自身打包体系</td></tr>
+                  <tr><td>配置</td><td>约定优于配置，插件生态</td><td>灵活但配置复杂</td></tr>
+                </tbody>
+              </table>
+              <p><strong>口述：</strong>「开发阶段 Vite 利用浏览器 ESM 不打包，冷启动快；生产仍要打包优化，用 Rollup。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · Vite 开发环境为什么快？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>改一个 Vue 组件，Vite 几乎秒更新；Webpack 大项目要等几秒——原理差在哪？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li>入口 <code>index.html</code> 直接引用 <code>&lt;script type="module"&gt;</code></li>
+                <li>浏览器请求哪个模块，Vite 才编译哪个（esbuild 预构建 node_modules）</li>
+                <li>不需要先把整个依赖图打成 bundle 再启动</li>
+                <li>HMR 只替换变更模块边界，保持状态</li>
+              </ol>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 生产构建会做哪些优化？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>打包后 <code>assets/index-a1b2c3.js</code> 文件名带 hash——构建流水线里发生了什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>Tree Shaking 删除未使用导出</li>
+                <li>代码压缩（Terser/esbuild）</li>
+                <li>代码分割（dynamic import → 多个 chunk）</li>
+                <li>资源 hash 文件名 → 长缓存（见 <a href="cache.html#q5">缓存 Q5</a>）</li>
+                <li>CSS 提取、图片压缩、Legacy 插件（可选）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 路由懒加载 / 代码分割怎么做？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>管理后台 50+ 路由，首屏不想全打进一个 3MB 的 bundle——怎么拆？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>// Vue Router
+{
+  path: '/orders',
+  component: () =&gt; import('./views/Orders.vue'),
+}
+
+// Webpack 魔法注释（可选命名 chunk）
+import(/* webpackChunkName: "orders" */ './Orders.vue')</code></pre>
+              <p><strong>原则：</strong>按路由/弹窗/重型图表库拆分；公共依赖抽 vendor chunk；注意 chunk 过多也有 HTTP 开销（HTTP/2 缓解）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q5 · Loader 和 Plugin 区别？（Webpack）</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>Loader：</strong>文件转换器（sass→css、ts→js、vue→js）</li>
+                <li><strong>Plugin：</strong>扩展构建生命周期（HtmlWebpackPlugin、DefinePlugin、压缩）</li>
+              </ul>
+              <p>口诀：Loader 处理模块内容，Plugin 处理打包流程。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、Monorepo &amp; 规范</h2>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · Monorepo 解决什么问题？pnpm workspace 怎么用？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>猫咔：Web、Electron、小程序、shared-api 在一个仓库——为什么不上 multirepo？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>收益：</strong>共享代码一处改、类型统一、原子提交、依赖提升省磁盘。</p>
+              <pre><code>// pnpm-workspace.yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+// apps/web 引用
+"dependencies": {
+  "@moka/shared-api": "workspace:*"
+}</code></pre>
+              <p><strong>注意：</strong>边界清晰（packages 不互相乱依赖）、CI 可按变更包构建、版本发布策略（changesets）。</p>
+              <p>与 <a href="vue3.html#q12">Vue3 Q12</a> 分层思路一致。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · ESLint + Prettier 怎么分工？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>ESLint：</strong>代码质量（未使用变量、hooks 规则、import 顺序）</li>
+                <li><strong>Prettier：</strong>纯格式化（缩进、引号、换行）</li>
+                <li>用 <code>eslint-config-prettier</code> 避免规则冲突</li>
+                <li>husky + lint-staged 提交前检查</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · 环境变量 .env 怎么用？哪些不能暴露？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Vite 里 <code>VITE_API_BASE</code> 配接口地址，有人把 OSS Secret 也写进 <code>.env</code>——行吗？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>Vite 只有 <code>VITE_</code> 前缀会暴露给客户端代码</li>
+                <li><code>.env.development</code> / <code>.env.production</code> 分环境</li>
+                <li><strong>绝不能进前端 bundle：</strong>数据库密码、OSS Secret、私钥</li>
+                <li>敏感操作走后端签名接口（上传凭证短期有效）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">三、部署 &amp; 调试</h2>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · Source Map 是什么？生产环境开不开？</h3>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>映射压缩后代码到源码，便于 Sentry 等定位错误行。</p>
+              <ul>
+                <li>生产可 <code>hidden-source-map</code>：上报平台可用，浏览器不暴露给用户</li>
+                <li>不要公开完整 source-map 到 CDN，防源码泄露</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 开发代理 proxy 解决什么？和 Nginx 反代关系？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p><code>vite.config.ts</code> 里 <code>server.proxy</code> 把 <code>/api</code> 转到后端——和跨域专题什么关系？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>开发时浏览器请求同源 <code>localhost:5173/api</code>，Vite 转发到真实后端，绕过浏览器 CORS 限制。</p>
+              <p>生产用 Nginx 反代或后端 CORS，见 <a href="cors.html#q6">跨域 Q6</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q11 · UI 组件库按需加载怎么配？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Vue3 + Vite 项目只用 10 个 Ant Design Vue 组件，打包却很大——</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>// vite.config.ts
+import Components from 'unplugin-vue-components/vite'
+import { AntDesignVueResolver } from 'unplugin-vue-components/resolvers'
+
+Components({
+  resolvers: [AntDesignVueResolver({ importStyle: 'less' })]
+})</code></pre>
+              <p><strong>效果：</strong>模板里用到的组件自动 import + 样式按需。</p>
+              <p>Element Plus / Vant 同理；Webpack 时代用 babel-plugin-import。</p>
+              <p>二次封装见 <a href="components.html#q6">组件封装 Q6</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

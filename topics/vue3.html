@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue3 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="vue3">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>💚 Vue3</h1>
+        <p class="subtitle">含实战场景 · 16 题 · 精练 8 项 · 与 <a href="typescript.html">TypeScript</a> / <a href="vue-router.html">Vue Router</a> / <a href="vue2.html">Vue2</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q2">Q2</a> 响应式原理：Proxy vs defineProperty</li>
+          <li><a href="#q3">Q3</a> ref vs reactive 选型与坑</li>
+          <li><a href="#q4">Q4</a> 虚拟 DOM &amp; Diff 简述</li>
+          <li><a href="#q5">Q5</a> nextTick 为什么需要</li>
+          <li><a href="#q7">Q7</a> Pinia 设计 &amp; 状态流</li>
+          <li><a href="#q11">Q11</a> 大量图片列表怎么优化</li>
+          <li><a href="#q13">Q13</a> 生命周期 &amp; onActivated</li>
+          <li><a href="#q14">Q14</a> v-model / slot / 自定义指令</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、Vue3 基础 ── -->
+      <section class="section">
+        <h2 class="section-title">一、Vue3 基础 &amp; 对比 Vue2</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q1 · Vue3 相对 Vue2 有哪些核心变化？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              猫咔大师 Monorepo 里同时有 Vue2 管理后台和 Vue3 工作台，面试问：
+              「为什么新项目选 Vue3？和 Vue2 比你会关注哪些差异？」
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>方面</th><th>Vue3</th><th>Vue2</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>响应式</td><td>Proxy</td><td>Object.defineProperty</td></tr>
+                  <tr><td>API 风格</td><td>Composition API 为主</td><td>Options API</td></tr>
+                  <tr><td>状态管理</td><td>Pinia（官方推荐）</td><td>Vuex</td></tr>
+                  <tr><td>性能</td><td>编译优化、Tree-shaking、更小运行时</td><td>相对较重</td></tr>
+                  <tr><td>TS</td><td>源码 TS 重写，类型推导更好</td><td>支持但体验弱</td></tr>
+                  <tr><td>多根节点</td><td>Fragment 支持</td><td>单根</td></tr>
+                </tbody>
+              </table>
+              <p><strong>面试口述：</strong>「Vue3 主要是响应式升级、Composition API 更好组织逻辑、性能与 TS 体验更好；我们新项目用 Vue3 + Pinia + Vite。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · Vue3 响应式原理：为什么用 Proxy？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              选片项目状态里有嵌套对象 <code>project.meta.client</code>，
+              后期动态新增 <code>project.extraTags = []</code> 也要触发视图更新——
+              Vue2 和 Vue3 在这里有何不同？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Vue3：</strong>用 <code>Proxy</code> 代理整个对象，拦截 get/set/deleteProperty 等。</p>
+              <p><strong>优势（相对 Vue2 defineProperty）：</strong></p>
+              <ul>
+                <li>能监听<strong>新增 / 删除</strong>属性（Vue2 需 <code>Vue.set</code>）</li>
+                <li>能监听<strong>数组下标 / length</strong> 等（Vue2 需 hack）</li>
+                <li>一次代理整对象，不用递归 defineProperty 到每层（Vue3 仍是惰性深层代理）</li>
+              </ul>
+              <p><strong>简述流程：</strong></p>
+              <ol>
+                <li><code>reactive(obj)</code> → 返回 Proxy</li>
+                <li>get 时 <code>track</code> 收集依赖（当前活跃的 effect）</li>
+                <li>set 时 <code>trigger</code> 通知依赖更新 → 调度组件重新渲染</li>
+              </ol>
+              <p><strong>注意：</strong>Proxy 无法代理非对象（基本类型）→ 用 <code>ref</code> 包一层。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · ref 和 reactive 怎么选？有哪些坑？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>const count = ref(0);
+let state = reactive({ list: [] });
+
+// 解构后 list 还会更新吗？
+const { list } = state;
+
+// 整体替换 state 会怎样？
+state = reactive({ list: [1, 2] });</code></pre>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>选型：</strong></p>
+              <ul>
+                <li><code>ref</code>：基本类型、或需要整体替换的单一值；模板里自动解包</li>
+                <li><code>reactive</code>：结构固定的对象/集合，按属性读写</li>
+              </ul>
+              <p><strong>经典坑：</strong></p>
+              <ul>
+                <li><strong>解构丢失响应式：</strong><code>const { list } = state</code> → 用 <code>toRefs(state)</code> 或 <code>storeToRefs(piniaStore)</code></li>
+                <li><strong>整体赋值丢失：</strong><code>let state = reactive(...); state = {...}</code> 不行 → 改属性或改用 <code>ref</code></li>
+                <li><strong>ref 在 script 里要 .value</strong>，模板里自动解包</li>
+              </ul>
+              <p><strong>项目建议：</strong>Pinia store 解构用 <code>storeToRefs</code> 保留响应式；actions 直接从 store 取。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、渲染机制 ── -->
+      <section class="section">
+        <h2 class="section-title">二、虚拟 DOM &amp; 更新机制</h2>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 虚拟 DOM 是什么？Vue3 Diff 大致怎么做？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              底片墙一次渲染 200 张缩略图，改其中一张的选中态——
+              Vue 怎么知道更新哪一块 DOM，而不是整页重绘？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>虚拟 DOM：</strong>用 JS 对象描述真实 DOM 结构；数据变 → 生成新 VNode 树 → 与旧树 <strong>Diff</strong> → 得到最小 patch → 更新真实 DOM。</p>
+              <p><strong>Vue3 Diff 要点（口述版）：</strong></p>
+              <ul>
+                <li>同层比较，不跨层（降低复杂度）</li>
+                <li>用 <strong>key</strong> 标识节点，列表 Diff 时双端指针 + 最长递增子序列优化移动</li>
+                <li>编译期标记静态节点（PatchFlag、Block Tree）→ 跳过不变部分，只追踪动态节点</li>
+              </ul>
+              <p><strong>面试答法：</strong>「不是虚拟 DOM 一定快，而是把多次变更批量成最小 DOM 操作；Vue3 靠编译优化减少 Diff 范围。」</p>
+              <p>浏览器真实渲染见 <a href="rendering.html">渲染&性能</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · nextTick 解决什么问题？和 Event Loop 什么关系？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>selectedIds.value.push(id);
+// 立刻量高度 — 拿不到最新 DOM
+const h = galleryRef.value.offsetHeight;</code></pre>
+            <p>选片后列表变长，要滚动到新项，但 DOM 还没更新——怎么办？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong>Vue 把同一 tick 内的状态变更<strong>批量异步</strong>更新 DOM（微任务队列），同步代码里 DOM 仍是旧的。</p>
+              <p><strong>解法：</strong></p>
+              <pre><code>selectedIds.value.push(id);
+await nextTick();
+galleryRef.value?.scrollIntoView({ ... });</code></pre>
+              <p><strong>和 Event Loop：</strong><code>nextTick</code> 默认用 Promise 微任务，在 DOM patch 完成后执行回调。详见 <a href="eventloop.html#q8">事件循环 Q8</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · v-if 和 v-show？v-for 为什么要 key？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              底片列表 5000 项：用 <code>v-if</code> 做 Tab 切换 vs <code>v-show</code>；
+              列表用 index 做 key 导致输入框内容错乱——为什么？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th></th><th>v-if</th><th>v-show</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>DOM</td><td>条件假 → 不渲染/销毁</td><td>始终渲染，切 display</td></tr>
+                  <tr><td>切换成本</td><td>高（重建）</td><td>低（只改 CSS）</td></tr>
+                  <tr><td>适用</td><td>不常切换、要懒加载</td><td>频繁显隐（如筛选面板）</td></tr>
+                </tbody>
+              </table>
+              <p><strong>key：</strong>帮助 Diff 识别节点身份。用 index 作 key，插入/删除/排序时节点被复用 → 子组件状态错乱。列表用稳定唯一 id（如 photoId）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、Composition & Pinia ── -->
+      <section class="section">
+        <h2 class="section-title">三、Composition API &amp; Pinia</h2>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q7 · Pinia 和 Vuex 比有什么优势？怎么设计业务状态流？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              选片项目有七阶段状态：待发送 → 待选片 → 已选片 → 待精修 → 待确认 → 已交片 → 已完成。
+              多端（Web / Electron / 小程序）共享 Pinia store，怎么组织？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Pinia vs Vuex：</strong></p>
+              <ul>
+                <li>无 mutations，actions 里可直接改 state（也可保持不可变风格）</li>
+                <li>天然 TS 支持、模块化无需嵌套 modules</li>
+                <li>体积更小，支持 Composition API 风格定义 store</li>
+                <li>DevTools 友好</li>
+              </ul>
+              <pre><code>export const useProjectStore = defineStore('project', () =&gt; {
+  const stage = ref&lt;ProjectStage&gt;('pending_send');
+  const photos = ref&lt;Photo[]&gt;([]);
+
+  const canUpload = computed(() =&gt;
+    ['pending_send', 'pending_select'].includes(stage.value)
+  );
+
+  async function advanceStage(next: ProjectStage) {
+    // 校验 + 调接口 + 更新本地
+    stage.value = next;
+  }
+
+  return { stage, photos, canUpload, advanceStage };
+});</code></pre>
+              <p><strong>设计建议：</strong></p>
+              <ul>
+                <li>阶段枚举 + 状态机校验（非法流转拒绝）</li>
+                <li>派生状态用 <code>computed</code>（如 canUpload）</li>
+                <li>异步放 actions；多端共用 store 定义放 Monorepo 公共包</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · computed、watch、watchEffect 怎么选？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <ul>
+              <li>A. 根据已选 id 列表算「已选张数 / 是否超限」</li>
+              <li>B. 路由 query 变化时重新拉项目详情</li>
+              <li>C. 上传进度变化时同步到任务中心 UI</li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>API</th><th>用途</th><th>上面场景</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>computed</code></td>
+                    <td>有缓存的派生值，依赖不变不重算</td>
+                    <td>A ✅</td>
+                  </tr>
+                  <tr>
+                    <td><code>watch</code></td>
+                    <td>监听特定源，可拿新旧值，适合异步副作用</td>
+                    <td>B ✅（watch route.query.id）</td>
+                  </tr>
+                  <tr>
+                    <td><code>watchEffect</code></td>
+                    <td>自动收集依赖，立即执行，适合同步副作用</td>
+                    <td>C 可用，注意清理</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>注意：</strong>watch 默认懒执行；深度监听大对象有性能成本；副作用里注意 onCleanup 取消请求（链 <a href="concurrency.html#q9">并发 Q9</a>）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · 组件通信方式有哪些？跨层怎么传？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              工作台深层子组件要读「当前项目 id」和「上传任务进度」，中间隔了 Layout、Sidebar 多层——
+              不想 props 钻透，有哪些方案？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>props / emit</strong> — 父子直接通信</li>
+                <li><strong>provide / inject</strong> — 跨层依赖注入（适合主题、项目上下文）</li>
+                <li><strong>Pinia</strong> — 全局/模块业务状态（推荐用于项目 id、任务中心）</li>
+                <li><strong>事件总线</strong> — Vue3 已移除，用 mitt 或 Pinia</li>
+                <li><strong>ref 暴露</strong> — <code>defineExpose</code> + 父调子方法（少用）</li>
+              </ul>
+              <p><strong>项目建议：</strong>业务状态进 Pinia；纯 UI 上下文用 provide/inject；避免全局事件滥用。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、项目实战 ── -->
+      <section class="section">
+        <h2 class="section-title">四、项目实战 &amp; 性能</h2>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · keep-alive 和 LRU 多标签页缓存怎么用？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              BPO 平台多标签页并行编辑考勤表单，切走再回来希望保留填写状态，
+              但开太多标签内存撑不住——你怎么做缓存策略？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>&lt;router-view v-slot="{ Component }"&gt;
+  &lt;keep-alive :max="10" :include="cachedNames"&gt;
+    &lt;component :is="Component" :key="route.fullPath" /&gt;
+  &lt;/keep-alive&gt;
+&lt;/router-view&gt;</code></pre>
+              <p><strong>要点：</strong></p>
+              <ul>
+                <li><code>include/exclude</code> 按组件 name 控制缓存</li>
+                <li><code>max</code> 超出时 LRU 淘汰最久未访问实例</li>
+                <li>配合路由 meta <code>keepAlive: true</code> 动态维护 cachedNames</li>
+                <li>缓存组件用 <code>onActivated</code> / <code>onDeactivated</code> 刷新数据</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q11 · 大量图片列表在 Vue3 里怎么优化？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              客户选片页一次加载 3000 张缩略图，滚动卡顿、内存涨——
+              结合你在猫咔项目里的实践，从 Vue 和浏览器两侧怎么说？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Vue 侧：</strong></p>
+              <ul>
+                <li><strong>虚拟列表</strong> — 只渲染视口 + 缓冲区（vue-virtual-scroller 等）</li>
+                <li>稳定 <code>key</code>（photoId），避免错误复用</li>
+                <li>大图用 <code>shallowRef</code> 存列表，避免深层响应式开销</li>
+                <li><code>v-memo</code> 缓存子树（Vue3.2+）</li>
+                <li>路由/Tab 懒加载，非首屏组件 <code>defineAsyncComponent</code></li>
+              </ul>
+              <p><strong>资源侧：</strong></p>
+              <ul>
+                <li>缩略图而非原图；懒加载 <code>loading="lazy"</code></li>
+                <li>分批请求、Intersection Observer 进入视口再加载</li>
+                <li>Electron 用主进程 Sharp 生成缩略图，减轻渲染进程压力</li>
+              </ul>
+              <p>浏览器渲染原理见 <a href="rendering.html#q9">渲染 Q9</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q12 · 如何把业务 Hooks 沉淀到 Monorepo 公共包？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              Web、Electron、小程序都要用「分页列表 + 上传 + 登录鉴权」，
+              你在 pnpm workspace 里怎么拆 packages，避免三端各写一套？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>分层思路：</strong></p>
+              <pre><code>packages/
+  shared-types/     # TS 类型、枚举（ProjectStage）
+  shared-utils/     # 纯函数、MD5、路径处理
+  shared-api/       # 请求封装、拦截器、错误码
+  shared-composables/ # usePagination、useUpload（无 UI）
+  ui-web/           # Ant Design Vue 组件
+  app-electron/
+  app-miniapp/      # UniApp 适配层</code></pre>
+              <p><strong>原则：</strong></p>
+              <ul>
+                <li>Composables 只依赖 Vue 响应式 + 纯逻辑，不绑具体 UI 库</li>
+                <li>平台差异（文件选择、存储）用 adapter 接口，各端实现</li>
+                <li>状态枚举、接口类型统一，减少联调返工</li>
+              </ul>
+              <p><strong>面试答法：</strong>「逻辑下沉 composables + types，UI 和平台能力各 app 适配，这是我在猫咔 Monorepo 的做法。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q13" data-qid="q13">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q13 · Vue3 生命周期有哪些？keep-alive 下 onActivated 何时触发？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>多标签页缓存的表单页，从列表切回来要刷新数据但不丢滚动——用哪个钩子？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Composition API：</strong></p>
+              <ul>
+                <li><code>onBeforeMount / onMounted</code> — DOM 挂载</li>
+                <li><code>onBeforeUpdate / onUpdated</code> — 响应式数据变触发重渲染</li>
+                <li><code>onBeforeUnmount / onUnmounted</code> — 销毁清定时器、取消请求</li>
+                <li><code>onActivated / onDeactivated</code> — keep-alive 缓存组件切回/切走</li>
+              </ul>
+              <p><strong>实践：</strong>首次拉数放 <code>onMounted</code>；缓存页每次显示刷新用 <code>onActivated</code>；副作用清理放 <code>onUnmounted</code> + watch onCleanup。</p>
+              <p>Vue2 对照见 <a href="vue2.html#q3">Vue2 Q3</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q14" data-qid="q14">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q14 · v-model 原理？slot 和自定义指令常见用法？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>封装 <code>BaseUpload</code> 支持 <code>v-model:fileList</code>，表格操作用 slot，输入框自动 focus 用指令——</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>v-model：</strong>prop <code>modelValue</code> + emit <code>update:modelValue</code>；多个 v-model 用参数：<code>v-model:visible</code>。</p>
+              <p><strong>slot：</strong></p>
+              <ul>
+                <li>默认 slot — 内容分发</li>
+                <li>具名 slot — <code>#action</code></li>
+                <li>作用域 slot — <code>#default="{ row }"</code> 把数据交给父组件渲染</li>
+              </ul>
+              <p><strong>自定义指令：</strong></p>
+              <pre><code>const vFocus = {
+  mounted: (el) =&gt; el.focus()
+}</code></pre>
+              <p>权限指令见 <a href="vue-router.html#q5">Vue Router Q5</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q15" data-qid="q15">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q15 · Teleport 和 Suspense 解决什么问题？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Modal 写在深层组件里但想挂到 body；异步组件加载时要显示 loading——</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Teleport：</strong>把 DOM 渲染到指定容器（如 <code>to="body"</code>），解决 z-index / overflow 裁剪。</p>
+              <p><strong>Suspense：</strong>包裹异步组件，<code>#default</code> + <code>#fallback</code> 展示加载态；配合 <code>defineAsyncComponent</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q16" data-qid="q16">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q16 · Vue3 从 Vue2 迁移常见坑？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Monorepo 里 Vue2 BPO 和 Vue3 工作台并存——升级时要改哪些破坏性变更？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>移除 filters、$on/$off 事件总线</li>
+                <li>v-model  prop 从 <code>value</code> 改 <code>modelValue</code></li>
+                <li>Fragment 多根节点；$attrs 透传行为变化</li>
+                <li>Vue Router 4：new Router 创建方式、addRoute</li>
+                <li>Vuex → Pinia 迁移</li>
+                <li>IE11 不再支持</li>
+              </ul>
+              <p>完整对比见 <a href="vue2.html">Vue2 专题</a>、<a href="vue3.html#q1">Q1</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

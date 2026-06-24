@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>文件上传 &amp; OSS · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="upload">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>📤 文件上传 &amp; OSS</h1>
+        <p class="subtitle">含实战场景 · 8 题 · 精练 6 项 · 与 <a href="concurrency.html">异步并发</a> / <a href="electron.html">Electron</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 直传 vs 服务端中转</li>
+          <li><a href="#q2">Q2</a> 预签名 / STS 凭证流程</li>
+          <li><a href="#q3">Q3</a> 秒传 MD5 原理</li>
+          <li><a href="#q4">Q4</a> 分片上传 &amp; 断点续传</li>
+          <li><a href="#q5">Q5</a> 并发池 + 进度 + 取消</li>
+          <li><a href="#q6">Q6</a> 上传任务中心架构</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">一、上传方案</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 前端直传 OSS 和服务端中转怎么选？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>摄影师一次上传 5000 张底片，每张 20MB——文件不经业务服务器，直接进 OSS/Kodo，为什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead><tr><th>方式</th><th>优点</th><th>缺点</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><strong>直传对象存储</strong></td>
+                    <td>带宽不进业务机、可断点续传、CDN 就近</td>
+                    <td>需凭证管理、回调校验</td>
+                  </tr>
+                  <tr>
+                    <td><strong>服务端中转</strong></td>
+                    <td>权限简单、易做病毒扫描</td>
+                    <td>服务器带宽/内存瓶颈、大文件超时</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>常见架构：</strong>前端向后端要<strong>短期上传凭证</strong> → 直传 OSS → OSS 回调或前端通知后端落库。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 预签名 URL / STS 凭证流程？Secret 能放前端吗？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Monorepo 里有人把 OSS Secret 写进 <code>.env</code> 给 Vite 用——对吗？正确流程是什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>正确流程：</strong></p>
+              <ol>
+                <li>前端带 token 请求后端 <code>/upload/token</code></li>
+                <li>后端用 Secret 签发<strong>短期</strong> STS / PostPolicy / 预签名 URL（限定 bucket、路径前缀、过期时间）</li>
+                <li>前端用凭证直传，过期重新申请</li>
+                <li>上传成功后把 objectKey 提交后端关联业务记录</li>
+              </ol>
+              <p><strong>绝不能：</strong>OSS AccessKey Secret 进前端 bundle（任何人可反编译拿走）。</p>
+              <p>见 <a href="engineering.html#q8">工程化 Q8</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 秒传（MD5 / ETag）怎么实现？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>同一张 JPG 重复上传，希望跳过实际上传——前端和后端各做什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li>选文件后计算 hash（MD5 / SHA-256 / SparkMD5 分块读大文件）</li>
+                <li>调 <code>checkFile</code> 接口传 hash + 大小 + 文件名</li>
+                <li>后端查是否已有相同 object → 有则返回已有 URL（秒传成功）</li>
+                <li>无则返回 uploadId / 凭证，走正常上传</li>
+              </ol>
+              <p><strong>注意：</strong>大文件 MD5 用 Web Worker 避免卡 UI；Electron 可在 worker_threads 算；hash 碰撞极低但业务可再加 size 校验。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 分片上传和断点续传怎么做？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>单文件 200MB RAW，弱网传到一半断了——怎么续传而不是从头来？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li>文件切成固定大小 chunk（如 5MB）</li>
+                <li>后端/init 接口返回 <code>uploadId</code></li>
+                <li>逐片上传，带 partNumber + uploadId</li>
+                <li>本地记录已成功的 part 列表（IndexedDB / localStorage）</li>
+                <li>中断后 listParts 或读本地进度，只传缺失片</li>
+                <li>全部完成后调 complete 合并</li>
+              </ol>
+              <p><strong>前端：</strong>每片独立重试；complete 前校验片数完整；取消时调 abort 清理服务端碎片。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">二、任务中心 &amp; 工程实践</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 批量上传：并发控制、进度、取消、重试怎么设计？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>100 张图同时传会打满带宽和连接数——你的任务中心怎么限流？用户点取消呢？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>并发池</strong>：最多 N 个 in-flight（如 3～6），完成一个再取下一个 → <a href="concurrency.html#q5">并发 Q5</a></li>
+                <li><strong>进度</strong>：单文件 xhr/fetch onProgress + 总进度 = Σ(已传字节)/总字节</li>
+                <li><strong>取消</strong>：AbortController 绑每个请求；队列里 pending 任务标记 cancelled 跳过</li>
+                <li><strong>重试</strong>：指数退避 + 最大次数；仅对网络/5xx 重试，4xx 不重试</li>
+                <li><strong>失败隔离</strong>：单文件失败不阻塞队列，汇总失败列表支持「仅重传失败项」</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 上传任务中心架构怎么拆？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>底片上传要：压缩、MD5、秒传、凭证、进度、重试——Pinia + EventEmitter 怎么组织？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>UploadQueue（调度）
+  ├── UploadTask × N（状态机：pending→hashing→uploading→done/fail）
+  ├── ConcurrencyPool（max=3）
+  ├── CredentialService（取/刷新 OSS 凭证）
+  └── HashWorker（MD5 计算）
+
+Pinia uploadStore：任务列表、总进度、全局 pause/resume
+UI：任务中心面板订阅 store + 事件</code></pre>
+              <p><strong>状态机：</strong>idle → hashing → checking（秒传）→ uploading → success | failed | cancelled</p>
+              <p><strong>压缩：</strong>上传前 canvas / wasm 压 JPEG quality，权衡清晰度与体积。</p>
+              <p>EventEmitter 模式见 <a href="handwrite.html#q8">手写 Q8</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · 多存储兼容（OSS / Kodo）前端怎么抽象？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>平台管理后台可切换对象存储厂商——上传模块怎么避免 if/else 满天飞？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p>定义 <code>StorageAdapter</code> 接口：</p>
+              <pre><code>interface StorageAdapter {
+  getCredential(file: FileMeta): Promise&lt;Credential&gt;
+  upload(file: File, cred: Credential, opts: UploadOpts): Promise&lt;Result&gt;
+  abort(taskId: string): void
+}</code></pre>
+              <p>各厂商实现差异（PostPolicy vs 分片 API）封装在 adapter 内；业务只调统一 <code>uploadFile()</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q8 · Electron 本地上传和 Web 上传差异？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Electron 扫本地目录批量上传，Web 用 input 选文件——共用队列层要注意什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li>Electron 可读目录路径 + 流式读文件，不必先读进内存</li>
+                <li>MD5 可在主进程 worker 算，见 <a href="electron.html#q6">Electron Q6</a></li>
+                <li>Web 只有 File/Blob，无真实路径</li>
+                <li>队列层统一抽象为 <code>{ name, size, readStream(): ReadableStream }</code></li>
+                <li>大文件 Electron 注意内存；Web 注意浏览器并发连接数限制（同域约 6）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

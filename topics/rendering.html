@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>浏览器渲染 &amp; 性能 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="rendering">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🎨 浏览器渲染 &amp; 性能</h1>
+        <p class="subtitle">含实战场景 · 12 题 · 精练 7 项 · 与 <a href="cache.html">浏览器缓存</a> / <a href="miniapp.html">小程序</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 从 URL 到像素：渲染流水线</li>
+          <li><a href="#q2">Q2</a> 重排 / 重绘 / 合成</li>
+          <li><a href="#q3">Q3</a> 哪些操作触发重排</li>
+          <li><a href="#q4">Q4</a> 动画用 transform 还是 top</li>
+          <li><a href="#q6">Q6</a> 布局抖动 layout thrashing</li>
+          <li><a href="#q8">Q8</a> 首屏 / LCP 怎么优化</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、渲染流水线 ── -->
+      <section class="section">
+        <h2 class="section-title">一、渲染流水线</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 浏览器从 HTML 到屏幕像素经历了什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              用户打开你的 SPA，Network 里 JS/CSS 都 200 了，但白屏很久才出内容——
+              面试官问「从下载完 HTML 到用户看见画面，浏览器做了什么？」
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>简化流水线（常背版）：</strong></p>
+              <ol>
+                <li><strong>解析 HTML</strong> → 构建 DOM 树</li>
+                <li><strong>解析 CSS</strong> → 构建 CSSOM</li>
+                <li><strong>DOM + CSSOM</strong> → 渲染树（Render Tree，不含不可见节点）</li>
+                <li><strong>Layout（布局 / 重排）</strong> → 计算几何位置尺寸</li>
+                <li><strong>Paint（绘制 / 重绘）</strong> → 填充像素（颜色、边框、阴影等）</li>
+                <li><strong>Composite（合成）</strong> → 图层合成上屏</li>
+              </ol>
+              <p><strong>面试口述：</strong>「解析建树 → 布局 → 绘制 → 合成；JS 可能阻塞解析，CSS 阻塞渲染。」</p>
+              <p>资源加载与缓存策略见 <a href="cache.html">浏览器缓存</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 重排、重绘、合成有什么区别？成本谁高？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              性能面板里看到 Recalculate Style、Layout、Paint、Composite Layers——
+              改 <code>width</code>、改 <code>color</code>、改 <code>transform</code> 分别会触发哪些？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>名称</th><th>别名</th><th>做什么</th><th>成本</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>重排</strong></td>
+                    <td>Reflow / Layout</td>
+                    <td>重新计算元素几何（位置、大小）</td>
+                    <td>高（可能牵连整页）</td>
+                  </tr>
+                  <tr>
+                    <td><strong>重绘</strong></td>
+                    <td>Repaint / Paint</td>
+                    <td>外观变化但不影响布局（颜色等）</td>
+                    <td>中</td>
+                  </tr>
+                  <tr>
+                    <td><strong>合成</strong></td>
+                    <td>Composite</td>
+                    <td>GPU 合成已有图层</td>
+                    <td>低（理想动画路径）</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>记忆：</strong>布局变 → 重排；只变外观 → 可能只重绘；<code>transform</code> / <code>opacity</code> 常走合成，不触发布局。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、触发与优化 ── -->
+      <section class="section">
+        <h2 class="section-title">二、什么触发重排 &amp; 怎么避免</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 哪些常见操作会触发重排？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>下面哪些在滚动监听里做会卡？</p>
+            <ul>
+              <li>A. <code>el.style.width = el.offsetWidth + 1 + 'px'</code></li>
+              <li>B. <code>el.style.color = 'red'</code></li>
+              <li>C. <code>el.style.transform = 'translateX(10px)'</code></li>
+              <li>D. <code>document.body.appendChild(newNode)</code></li>
+              <li>E. <code>window.getComputedStyle(el).height</code> 后立刻改 width</li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>会触发 / 可能触发重排：</strong>A、D、E（读布局 + 写布局）</p>
+              <p><strong>通常不触发布局：</strong>B（重绘）、C（合成，见 Q4）</p>
+              <p><strong>常见重排触发：</strong></p>
+              <ul>
+                <li>改 width/height/margin/padding/display/position 等几何相关属性</li>
+                <li>增删 DOM、改变字体、窗口 resize</li>
+                <li>读取 <code>offsetWidth</code>、<code>getBoundingClientRect</code> 等（强制同步布局）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 动画用 left/top 还是 transform？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              要做一个 60fps 的侧边栏滑入动画，同事写了
+              <code>setInterval</code> 不断改 <code>left</code>，Chrome Performance 里 Layout 条爆红——怎么改？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>推荐：</strong><code>transform: translateX()</code> + <code>transition</code> 或 CSS <code>@keyframes</code>，配合 <code>will-change: transform</code>（慎用、动画结束去掉）。</p>
+              <pre><code>.sidebar {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+.sidebar.open {
+  transform: translateX(0);
+}</code></pre>
+              <p><strong>原因：</strong></p>
+              <ul>
+                <li><code>left/top</code> 改变布局 → 每帧重排，主线程压力大</li>
+                <li><code>transform</code> / <code>opacity</code> 可提升为合成层，GPU 参与，不触发布局</li>
+              </ul>
+              <p>动画时机可配合 <a href="eventloop.html#q7">requestAnimationFrame</a>，在下一帧绘制前更新。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q5 · 合成层 / will-change 是什么？滥用有何问题？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              听说给元素加 <code>transform: translateZ(0)</code> 或
+              <code>will-change: transform</code> 能「硬件加速」，于是给全站 div 都加了——会有什么问题？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>合成层：</strong>某些元素单独成层，由 GPU 合成，适合独立动画。</p>
+              <p><strong>常见提升手段：</strong><code>will-change</code>、3D transform、<code>opacity</code> 动画、<code>&lt;video&gt;</code> / <code>canvas</code> 等。</p>
+              <p><strong>滥用问题：</strong></p>
+              <ul>
+                <li>层太多 → 内存暴涨（移动端尤其明显）</li>
+                <li>层爆炸 → 合成阶段反而更慢</li>
+                <li><code>will-change</code> 应短期使用，动画完移除</li>
+              </ul>
+              <p><strong>面试答法：</strong>「合成能避开重排，但层不是越多越好，按动画元素精准提升。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 布局抖动（layout thrashing）怎么产生？怎么修？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <pre><code>// 根据每个 li 的高度动态设置容器高度
+items.forEach((el) =&gt; {
+  const h = el.offsetHeight; // 读布局
+  el.style.marginBottom = '10px'; // 写样式 → 强制同步布局
+});
+container.style.height = total + 'px';</code></pre>
+            <p>循环里交替「读布局 + 写样式」，页面突然很卡——这叫什么？怎么批量处理？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>布局抖动：</strong>在一帧内多次「读布局属性 → 写样式」，浏览器被迫反复强制同步布局（Forced Synchronous Layout）。</p>
+              <p><strong>修复：读写分离</strong></p>
+              <pre><code>// ✅ 先批量读
+const heights = items.map((el) =&gt; el.offsetHeight);
+// 再批量写
+items.forEach((el, i) =&gt; {
+  el.style.marginBottom = '10px';
+});
+container.style.height = heights.reduce((a, b) =&gt; a + b, 0) + 'px';</code></pre>
+              <p><strong>其它手段：</strong>用 <code>requestAnimationFrame</code> 合并 DOM 写操作；文档片段 <code>DocumentFragment</code> 批量插入；虚拟列表减少 DOM 数量。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、指标与首屏 ── -->
+      <section class="section">
+        <h2 class="section-title">三、性能指标 &amp; 首屏优化</h2>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · FP / FCP / LCP / CLS 分别是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              老板要看 Core Web Vitals，报表里有 LCP 2.8s、CLS 0.15——
+              各指标在衡量什么？优化时优先盯哪个？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>指标</th><th>含义</th><th>体验</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>FP</td><td>First Paint 首次绘制</td><td>任意像素首次出现</td></tr>
+                  <tr><td>FCP</td><td>First Contentful Paint</td><td>首屏有文字/图片等内容</td></tr>
+                  <tr><td>LCP</td><td>Largest Contentful Paint</td><td>最大内容块渲染完成（Core Web Vital）</td></tr>
+                  <tr><td>CLS</td><td>Cumulative Layout Shift</td><td>累积布局偏移（Core Web Vital）</td></tr>
+                  <tr><td>INP</td><td>Interaction to Next Paint</td><td>交互响应（取代 FID）</td></tr>
+                </tbody>
+              </table>
+              <p><strong>优化优先级（常考）：</strong>LCP（首屏大图/字体/阻塞 JS）、CLS（图片无尺寸、动态插入横幅）、INP（长任务阻塞主线程）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · 首屏慢怎么排查和优化？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              Vite 打包的 SPA：Lighthouse 显示 LCP 3.5s，主要耗时在「加载 JS」和「渲染阻塞」——
+              你会从哪几条线优化？（结合缓存策略）
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>排查：</strong>Network（瀑布图）、Performance、Lighthouse、Coverage（无用 JS/CSS）。</p>
+              <p><strong>优化清单（面试背 5 条即可）：</strong></p>
+              <ol>
+                <li><strong>资源体积：</strong>代码分割、Tree Shaking、压缩、图片 WebP/懒加载</li>
+                <li><strong>加载策略：</strong>路由懒加载、<code>defer</code>/<code>async</code>、非关键 JS 延后</li>
+                <li><strong>缓存：</strong>hash 静态资源长缓存 + <code>index.html</code> 短缓存（见 <a href="cache.html#q5">缓存 Q5</a>）</li>
+                <li><strong>渲染阻塞：</strong>关键 CSS 内联或优先、字体 <code>font-display: swap</code>、减少首屏依赖链</li>
+                <li><strong>传输：</strong>CDN、HTTP/2 多路复用、Gzip/Brotli、预连接 <code>preconnect</code></li>
+              </ol>
+              <p><strong>SSR/SSG：</strong>首屏直出 HTML，改善 FCP/LCP（框架向加分项）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、项目实战 ── -->
+      <section class="section">
+        <h2 class="section-title">四、项目实战</h2>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · 长列表卡顿怎么优化？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              订单列表 5000 条全渲染进 DOM，滚动掉帧、内存高——
+              除了「分页加载」，前端渲染层还能怎么做？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>核心思路：减少 DOM 数量 + 减少重排重绘</strong></p>
+              <ul>
+                <li><strong>虚拟列表（Virtual Scroll）：</strong>只渲染可视区 + 缓冲区（react-window、vue-virtual-scroller）</li>
+                <li><strong>分页 / 无限滚动：</strong>数据分批，DOM 有上限</li>
+                <li><strong>DocumentFragment</strong> 批量插入，减少回流次数</li>
+                <li>避免滚动中读 <code>offsetHeight</code>、避免复杂选择器</li>
+              </ul>
+              <p><strong>面试答法：</strong>「DOM 过多是根因，虚拟列表只保留视口内节点，配合 rAF 更新滚动位置。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · script defer/async、CSS 放哪、preload 怎么用？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              <code>index.html</code> 里同时有统计 SDK、业务 bundle、首屏关键 CSS——
+              标签怎么放才不阻塞首屏？和渲染阻塞什么关系？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>方式</th><th>行为</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>默认 <code>&lt;script&gt;</code></td>
+                    <td>下载并执行，阻塞 HTML 解析</td>
+                  </tr>
+                  <tr>
+                    <td><code>async</code></td>
+                    <td>异步下载，下完立即执行，不保证顺序</td>
+                  </tr>
+                  <tr>
+                    <td><code>defer</code></td>
+                    <td>异步下载，<strong>DOM 解析完后</strong>按顺序执行</td>
+                  </tr>
+                  <tr>
+                    <td>CSS <code>&lt;link&gt;</code></td>
+                    <td>默认阻塞渲染（构建 CSSOM）</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>实践：</strong></p>
+              <ul>
+                <li>业务主 bundle → <code>defer</code>（或模块 <code>type="module"</code> 默认 defer）</li>
+                <li>独立统计 → <code>async</code></li>
+                <li>关键字体/首图 → <code>&lt;link rel="preload"&gt;</code></li>
+                <li>非关键 CSS 可异步加载（注意 FOUC 权衡）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q11" data-qid="q11">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q11 · 图片懒加载怎么实现？和首屏 LCP 什么关系？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>选片页 3000 张缩略图，首屏只显示 20 张——如何延迟加载其余？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>原生：</strong><code>&lt;img loading="lazy"&gt;</code>（简单场景）</li>
+                <li><strong>Intersection Observer：</strong>进入视口再设 <code>src</code>（data-src 占位）</li>
+                <li><strong>响应式：</strong><code>srcset</code> + 合适尺寸，避免大图</li>
+                <li><strong>webp/AVIF</strong> 降级</li>
+              </ul>
+              <p><strong>LCP：</strong>最大内容元素常为 hero 图；首屏关键图 <code>preload</code> + 不用 lazy；非首屏才懒加载。</p>
+              <p>Vue 列表优化见 <a href="vue3.html#q11">Vue3 Q11</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q12" data-qid="q12">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q12 · 小程序 setData 和 Web 渲染优化有何不同？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>同一长列表，Web 用虚拟滚动，小程序还要额外注意什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>小程序额外成本：</strong>逻辑层 ↔ 渲染层通信，setData 序列化开销。</p>
+              <ul>
+                <li>控制单次 setData 数据量（&lt; 256KB 经验值）</li>
+                <li>路径更新 <code>'list[3].name'</code> 而非整表</li>
+                <li>recycle-view / 分页代替全量节点</li>
+              </ul>
+              <p>详见 <a href="miniapp.html#q1">小程序 Q1/Q7</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Electron · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="electron">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🖥 Electron</h1>
+        <p class="subtitle">含实战场景 · 10 题 · 精练 6 项 · 与 <a href="vue3.html">Vue3</a> / <a href="concurrency.html">异步并发</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 25 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 主进程 / 渲染进程 / preload</li>
+          <li><a href="#q2">Q2</a> IPC 通信方式</li>
+          <li><a href="#q3">Q3</a> contextIsolation 与安全配置</li>
+          <li><a href="#q4">Q4</a> preload 暴露文件 API 设计</li>
+          <li><a href="#q5">Q5</a> 为什么 Sharp 放主进程</li>
+          <li><a href="#q8">Q8</a> IPC 接入 Python / AI 任务流</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、进程模型 ── -->
+      <section class="section">
+        <h2 class="section-title">一、进程模型</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · 主进程、渲染进程、preload 各做什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              猫咔大师 Electron 工作台：窗口菜单、本地目录扫描、缩略图生成在「某处」；
+              Vue 页面在「另一处」——三者职责怎么划分？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>角色</th><th>职责</th><th>能否直接操作 DOM</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>主进程 Main</strong></td>
+                    <td>应用生命周期、创建窗口、系统 API、原生模块（fs、Sharp、spawn Python）</td>
+                    <td>❌</td>
+                  </tr>
+                  <tr>
+                    <td><strong>渲染进程 Renderer</strong></td>
+                    <td>每个窗口里的 Web 页面（你的 Vue 应用）</td>
+                    <td>✅</td>
+                  </tr>
+                  <tr>
+                    <td><strong>preload</strong></td>
+                    <td>在页面加载前注入，通过 <code>contextBridge</code> 向渲染层暴露受控 API</td>
+                    <td>可访问部分 Node，但不直接改 UI</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>记忆：</strong>一个 Electron 应用一个主进程；每个 BrowserWindow 一个渲染进程；preload 是渲染进程里、页面脚本运行前的桥梁。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · IPC 怎么通信？invoke / send 区别？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              渲染层要选本地文件夹、等主进程扫完返回文件列表，还要监听 AI 聚类进度——
+              用哪种 IPC 模式？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>两种常见模式：</strong></p>
+              <table>
+                <thead>
+                  <tr><th>模式</th><th>渲染 → 主</th><th>特点</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>异步请求/响应</td>
+                    <td><code>ipcRenderer.invoke('channel', args)</code></td>
+                    <td>返回 Promise，适合「要结果」的操作（扫目录、读文件）</td>
+                  </tr>
+                  <tr>
+                    <td>单向 + 事件</td>
+                    <td><code>ipcRenderer.send</code> / 主进程 <code>webContents.send</code></td>
+                    <td>适合通知、进度推送（上传进度、AI 任务状态）</td>
+                  </tr>
+                </tbody>
+              </table>
+              <pre><code>// preload
+contextBridge.exposeInMainWorld('electronAPI', {
+  scanDir: (path) =&gt; ipcRenderer.invoke('fs:scan', path),
+  onAiProgress: (cb) =&gt; ipcRenderer.on('ai:progress', (_, p) =&gt; cb(p)),
+});
+
+// main
+ipcMain.handle('fs:scan', async (_, dir) =&gt; { /* ... */ });</code></pre>
+              <p><strong>原则：</strong>渲染层不直接 <code>require('fs')</code>，统一走 preload 白名单 API。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、安全 ── -->
+      <section class="section">
+        <h2 class="section-title">二、安全边界</h2>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · contextIsolation、nodeIntegration 怎么配？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              为了省事有人设 <code>nodeIntegration: true</code>，页面里能直接
+              <code>require('child_process')</code>——为什么生产环境危险？推荐配置是什么？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>风险：</strong>渲染进程加载的远程页面 / XSS 一旦执行，可直接调用 Node → 读文件、执行系统命令。</p>
+              <p><strong>现代推荐（Electron 安全清单）：</strong></p>
+              <pre><code>webPreferences: {
+  contextIsolation: true,   // 隔离 preload 与页面 JS 上下文
+  nodeIntegration: false,   // 页面不能 require
+  sandbox: true,            // 渲染进程沙箱（视版本与需求）
+  preload: path.join(__dirname, 'preload.js'),
+}</code></pre>
+              <ul>
+                <li><strong>contextIsolation: true</strong> — 页面拿不到 Node，只能通过 <code>contextBridge</code> 暴露的 API</li>
+                <li><strong>nodeIntegration: false</strong> — 禁止页面脚本直接 require</li>
+                <li>禁用 <code>remote</code> 模块（已废弃）</li>
+                <li>加载外部 URL 时格外谨慎 CSP</li>
+              </ul>
+              <p><strong>面试答法：</strong>「最小权限：主进程干重活，preload 白名单暴露，渲染层当普通 Web。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · preload 如何设计「受控文件 API」？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              需要：选目录、递归扫描、批量复制、打开系统文件夹、检测文件是否存在。
+              渲染层 Vue 组件该怎么调用？preload 要暴露哪些方法？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>设计原则：</strong></p>
+              <ul>
+                <li>只暴露<strong>业务需要</strong>的方法，不暴露整个 <code>fs</code> / <code>path</code></li>
+                <li>主进程校验路径（禁止任意路径读写、防 <code>../</code> 穿越）</li>
+                <li>返回可序列化数据（路径字符串、文件元信息），大文件用流或分片</li>
+              </ul>
+              <pre><code>// preload.js
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('desktop', {
+  pickDirectory: () =&gt; ipcRenderer.invoke('dialog:pickDir'),
+  scanDirectory: (dir) =&gt; ipcRenderer.invoke('fs:scan', dir),
+  copyFiles: (items) =&gt; ipcRenderer.invoke('fs:copy', items),
+  revealInFolder: (filePath) =&gt; ipcRenderer.invoke('shell:show', filePath),
+});</code></pre>
+              <p><strong>Vue 侧：</strong>封装 <code>useDesktopFiles()</code> composable，内部调 <code>window.desktop</code>，与 Web 版 adapter 切换。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、性能与本地能力 ── -->
+      <section class="section">
+        <h2 class="section-title">三、性能 &amp; 本地能力</h2>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 为什么用 Sharp 在主进程生成缩略图？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              底片墙直接 <code>&lt;img src="file:///.../50MB.jpg"&gt;</code> 导致窗口卡顿——
+              你们改为主进程 Sharp 出缩略图再给渲染层，原因是什么？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>原因：</strong></p>
+              <ul>
+                <li>大图解码占 CPU/内存，放<strong>渲染进程</strong>会阻塞 UI 线程，滚动掉帧</li>
+                <li>Sharp（libvips）在主进程批量生成小图，渲染层只加载几百 KB 缩略图</li>
+                <li>原生模块（.node）通常放主进程更稳，避免多窗口重复加载</li>
+                <li>可提供 Electron 原生解码兜底，统一 IPC 接口</li>
+              </ul>
+              <p><strong>流程：</strong>扫目录 → 主进程队列生成 thumb → 返回 thumb 路径或 base64 → Vue 虚拟列表展示。</p>
+              <p>渲染优化见 <a href="rendering.html">渲染&性能</a>、<a href="vue3.html#q11">Vue3 Q11</a>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · 大量本地文件扫描如何不卡 UI？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              摄影师一次导入 2 万张 JPG+RAW，递归扫盘、算 MD5、匹配文件名——
+              主进程也不能一次同步跑完，你怎么调度？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>分批 / 流式</strong>：目录遍历用异步 API，每 N 个文件 yield 或发进度事件</li>
+                <li><strong>Worker 线程</strong>：<code>worker_threads</code> 处理 MD5、匹配，不堵主进程事件循环</li>
+                <li><strong>并发限制</strong>：MD5/复制用线程池，避免把磁盘打满（链 <a href="concurrency.html#q5">并发 Q5</a>）</li>
+                <li><strong>可取消</strong>：任务 id + AbortSignal，用户换目录时停掉旧任务</li>
+                <li><strong>增量结果</strong>：IPC 推送已扫描列表，UI 边扫边展示</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、项目实战 ── -->
+      <section class="section">
+        <h2 class="section-title">四、项目实战</h2>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · Web 与 Electron 共用一套 Vue 代码怎么拆？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              Monorepo 里 Web 版不能访问本地文件，Electron 版要扫盘——
+              业务组件如何不写两份？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Adapter 模式：</strong></p>
+              <pre><code>// packages/platform
+export interface FilePlatform {
+  pickDirectory(): Promise&lt;string | null&gt;;
+  scanDirectory(dir: string): Promise&lt;FileEntry[]&gt;;
+}
+
+// app-web: 仅上传 input，无本地扫盘
+// app-electron: 调 window.desktop
+
+// Vue 组件
+const platform = inject&lt;FilePlatform&gt;('filePlatform');</code></pre>
+              <p>与 <a href="vue3.html#q12">Vue3 Q12 Monorepo</a> 同一套思路：逻辑在 composables，平台能力注入。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · IPC 接入 Python / InsightFace，任务状态怎么设计？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              AI 人脸聚类：模型缺失要下载、解压、初始化、Busy 重试、用户取消、失败提示——
+              主进程跑 Python，渲染层 Pinia 怎么接？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>主进程：</strong></p>
+              <ul>
+                <li><code>child_process.spawn</code> 或常驻 Python 子进程</li>
+                <li>stdio / socket 传 JSON 行协议，或进度通过 IPC 转发</li>
+                <li>维护 <code>TaskManager</code>：单例任务、cancel token、kill 子进程</li>
+              </ul>
+              <p><strong>状态机（与简历一致）：</strong></p>
+              <pre>idle → model_missing → downloading → extracting
+  → initializing → running → success | failed | cancelled</pre>
+              <p><strong>渲染层：</strong></p>
+              <ul>
+                <li>Pinia store 存 <code>aiTask</code> 状态 + 进度</li>
+                <li><code>onAiProgress</code> 订阅 IPC 更新 UI</li>
+                <li>取消按钮 → <code>invoke('ai:cancel')</code> → 主进程终止子进程</li>
+              </ul>
+              <p><strong>面试亮点：</strong>「重活和模型都在主进程/子进程，渲染层只做状态流和结果展示。」</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · 自动更新、打包、环境变量要注意什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>electron-builder 打包 Win/Mac，内嵌 Python 模型包体积很大——面试可能问发布与更新策略。</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><strong>打包：</strong>electron-builder / forge；asar 打包应用代码；原生模块要 rebuild</li>
+                <li><strong>大资源：</strong>模型放 extraResources，首启或按需下载（你项目里的 model_missing 流程）</li>
+                <li><strong>自动更新：</strong>electron-updater + 发布服务器；注意签名（Mac notarize）</li>
+                <li><strong>环境：</strong>区分 dev / prod API；敏感配置不进渲染层</li>
+                <li><strong>安全：</strong>更新包 HTTPS + 签名校验</li>
+              </ul>
+              <p>了解即可，结合你「模型下载、解压」经历讲按需分发更加分。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · OpenIM 在 Web WASM 与 Electron SDK 双环境怎么适配？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              同一套 IM 封装，Web 用 WASM SDK，Electron 用原生 SDK——
+              登录、会话、未读、已读回执接口要统一，你会怎么抽象？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>思路（与文件 Adapter 相同）：</strong></p>
+              <pre><code>interface ImClient {
+  login(params: LoginParams): Promise&lt;void&gt;;
+  getConversationList(): Promise&lt;Conversation[]&gt;;
+  sendTextMessage(convId: string, text: string): Promise&lt;void&gt;;
+  onUnreadChange(cb: (n: number) =&gt; void): () =&gt; void;
+}
+
+// im-web-wasm / im-electron 各实现
+// Pinia chatStore 只依赖 ImClient 接口</code></pre>
+              <p><strong>注意：</strong>Electron 下 SDK 初始化可能在主进程或渲染进程（看官方文档）；断线重连、心跳、token 刷新逻辑放 composable 统一处理。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

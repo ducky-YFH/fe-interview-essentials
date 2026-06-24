@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>类型 &amp; 拷贝 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="types">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🧩 类型 &amp; 拷贝</h1>
+        <p class="subtitle">含实战场景 · 10 题 · 精练 6 项 · 与 <a href="typescript.html">TypeScript</a> / <a href="prototype.html">原型链</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> 7 种类型 + typeof 坑</li>
+          <li><a href="#q3">Q3</a> 判断数组 / null / NaN</li>
+          <li><a href="#q4">Q4</a> == vs === 隐式转换</li>
+          <li><a href="#q5">Q5</a> 值类型 vs 引用类型</li>
+          <li><a href="#q6">Q6</a> 浅拷贝方式与坑</li>
+          <li><a href="#q8">Q8</a> 手写深拷贝（循环引用）</li>
+        </ol>
+      </aside>
+
+      <!-- ── 一、数据类型 ── -->
+      <section class="section">
+        <h2 class="section-title">一、数据类型 &amp; typeof</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · JS 有哪些数据类型？typeof 有什么坑？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              接口返回 <code>null</code> 表示「无数据」，你写
+              <code>if (typeof data === 'object')</code> 想过滤对象，
+              结果 <code>null</code> 也进来了——为什么？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>7 种（常考分类）：</strong></p>
+              <ul>
+                <li><strong>基本类型（6）：</strong>undefined、null、boolean、number、string、symbol</li>
+                <li><strong>引用类型（1）：</strong>object（含数组、函数、Date、RegExp 等）</li>
+                <li>（ES2020+ 还有 <strong>bigint</strong>，部分面试会提）</li>
+              </ul>
+              <p><strong>typeof 常见结果：</strong></p>
+              <pre>typeof undefined   // 'undefined'
+typeof true        // 'boolean'
+typeof 42          // 'number'
+typeof 'hi'        // 'string'
+typeof Symbol()    // 'symbol'
+typeof null        // 'object'  ← 历史 bug，必背
+typeof []          // 'object'
+typeof {}          // 'object'
+typeof function(){}// 'function'</pre>
+              <p><strong>上面场景：</strong><code>typeof null === 'object'</code>，不能单靠 typeof 区分 null 和普通对象。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q2 · undefined 和 null 区别？什么时候用？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              表单字段未填写、接口明确返回「无此用户」、函数无返回值——
+              分别该用 <code>undefined</code> 还是 <code>null</code>？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th></th><th>undefined</th><th>null</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>含义</td><td>「未定义 / 缺省」</td><td>「空值 / 无对象」</td></tr>
+                  <tr><td>典型来源</td><td>未赋值、缺参、无 return</td><td>主动赋值表示空</td></tr>
+                  <tr><td>JSON</td><td>会被省略</td><td>会序列化为 <code>null</code></td></tr>
+                </tbody>
+              </table>
+              <p><strong>实践建议：</strong></p>
+              <ul>
+                <li>接口约定「没有数据」→ 常用 <code>null</code></li>
+                <li>可选链 <code>user?.name</code> 不存在 → <code>undefined</code></li>
+                <li>判断两者：<code>val == null</code> 同时匹配 undefined 和 null（少数合理用 == 的场景）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · 怎么可靠判断数组、null、NaN？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              工具函数要处理「可能是数组、可能是类数组 NodeList、可能是 null」的入参——
+              <code>typeof</code>、<code>instanceof</code>、<code>Array.isArray</code> 怎么选？
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>判断目标</th><th>推荐写法</th><th>注意</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>数组</td>
+                    <td><code>Array.isArray(val)</code></td>
+                    <td>跨 iframe 比 instanceof 可靠</td>
+                  </tr>
+                  <tr>
+                    <td>null</td>
+                    <td><code>val === null</code></td>
+                    <td>typeof 分不清 null</td>
+                  </tr>
+                  <tr>
+                    <td>NaN</td>
+                    <td><code>Number.isNaN(val)</code></td>
+                    <td><code>NaN === NaN</code> 为 false</td>
+                  </tr>
+                  <tr>
+                    <td>纯对象</td>
+                    <td><code>Object.prototype.toString.call(val) === '[object Object]'</code></td>
+                    <td>区分 array / date / null</td>
+                  </tr>
+                </tbody>
+              </table>
+              <pre><code>// 不推荐
+[] instanceof Array        // 跨 realm 可能失效
+isNaN('abc')               // true，会先转数字
+
+// 推荐
+Number.isNaN(NaN)          // true
+Number.isNaN('abc')        // false</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 二、相等性 ── -->
+      <section class="section">
+        <h2 class="section-title">二、相等性 == vs ===</h2>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · 下面哪些为 true？== 转换规则</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Code Review 里有人用 <code>==</code> 比较接口字符串 <code>'0'</code> 和数字 <code>0</code>，能通过但团队规范要求 <code>===</code>——背后的转换规则是什么？</p>
+          </div>
+          <pre><code data-runnable>console.log([] == false);
+console.log([] == ![]);
+console.log(null == undefined);
+console.log('0' == 0);
+console.log('' == 0);
+console.log(null === undefined);</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：全部 true，最后一条 false</strong></p>
+              <p><strong>== 规则（简化记忆）：</strong></p>
+              <ol>
+                <li>类型相同 → 同 ===</li>
+                <li><code>null == undefined</code> → true（且只和它俩）</li>
+                <li>一边是 number → 另一边转 number（<code>'' → 0</code>，<code>'0' → 0</code>）</li>
+                <li>一边是 boolean → 转 number 再比</li>
+                <li>一边是 object → 转原始值（<code>[] → '' → 0</code>）</li>
+              </ol>
+              <p><strong>经典：</strong><code>[] == ![]</code> → <code>[] == false</code> → <code>'' == false</code> → <code>0 == 0</code></p>
+              <p><strong>项目建议：</strong>默认 <code>===</code>；仅 <code>val == null</code> 判断 null/undefined 可接受。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · 值类型 vs 引用类型：赋值后改一个会影响另一个吗？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              Redux / Vue 里强调「不要直接改 state」，要返回新对象。
+              <code>const b = a</code> 后改 <code>b.items.push(1)</code>，<code>a</code> 会变吗？
+            </p>
+          </div>
+          <pre><code data-runnable>let a = 1;
+let b = a;
+b = 2;
+console.log('number:', a, b);
+
+const obj1 = { items: [1] };
+const obj2 = obj1;
+obj2.items.push(2);
+console.log('object:', obj1.items, obj2.items);
+console.log('obj1 === obj2:', obj1 === obj2);</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong></p>
+              <pre>number: 1 2
+object: [1, 2] [1, 2]
+obj1 === obj2: true</pre>
+              <ul>
+                <li><strong>基本类型</strong>：存值，<code>b = 2</code> 不影响 <code>a</code></li>
+                <li><strong>引用类型</strong>：存堆地址，<code>obj2 = obj1</code> 共享同一对象，改内部属性互相影响</li>
+                <li><code>===</code> 比较引用类型比的是<strong>引用地址</strong>，不是内容 → <code>[] === []</code> 为 false</li>
+              </ul>
+              <p>这是浅拷贝 / 不可变数据问题的根源，见 <a href="prototype.html">原型链</a> 中对象引用理解。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 三、深浅拷贝 ── -->
+      <section class="section">
+        <h2 class="section-title">三、浅拷贝 &amp; 深拷贝</h2>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q6 · 浅拷贝有哪些方式？有什么坑？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              表单 <code>defaultValues</code> 要复制一份给编辑态，用展开运算符
+              <code>{ ...defaults }</code> 够吗？用户改了嵌套的 <code>address.city</code> 会不会污染默认值？
+            </p>
+          </div>
+          <pre><code data-runnable>const defaults = { user: { name: 'Tom' }, tags: ['a'] };
+const draft = { ...defaults };
+
+draft.user.name = 'Jerry';
+draft.tags.push('b');
+
+console.log('defaults.name:', defaults.user.name);
+console.log('defaults.tags:', defaults.tags);
+console.log('draft === defaults:', draft === defaults);</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong><code>defaults.name: Jerry</code>，<code>tags: ['a','b']</code>，<code>draft === defaults: false</code></p>
+              <p><strong>浅拷贝</strong>只复制第一层，嵌套对象/数组仍共享引用。</p>
+              <p><strong>常见浅拷贝方式：</strong></p>
+              <ul>
+                <li><code>{ ...obj }</code>、<code>[...arr]</code></li>
+                <li><code>Object.assign({}, obj)</code></li>
+                <li><code>arr.slice()</code>、<code>arr.concat()</code></li>
+              </ul>
+              <p><strong>上面场景：</strong>有嵌套字段时要<strong>深拷贝</strong>，或不可变更新（只替换变了的层级）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q7" data-qid="q7">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q7 · JSON.parse(JSON.stringify) 能做深拷贝吗？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>快速克隆接口 JSON 响应用于本地编辑，同事写了 <code>JSON.parse(JSON.stringify(data))</code>——哪些字段会丢？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>会丢失或出问题的：</strong></p>
+              <ul>
+                <li><code>undefined</code>、<code>function</code>、<code>Symbol</code> 键/值</li>
+                <li><code>Date</code> → 变成字符串</li>
+                <li><code>RegExp</code> → 变成 <code>{}</code></li>
+                <li><code>Map</code> / <code>Set</code></li>
+                <li>循环引用 → 直接报错</li>
+              </ul>
+              <p><strong>适用：</strong>纯 JSON 数据（接口 DTO）的快速深拷贝。</p>
+              <p><strong>现代替代：</strong><code>structuredClone(obj)</code>（浏览器/Node 16+），支持 Date、Map、循环引用等，但不支持 function。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q8" data-qid="q8">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q8 · 手写 deepClone（含循环引用）</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>
+              配置树节点有 <code>parent</code> 指回父节点（循环引用），
+              还要复制 <code>Date</code> 字段——JSON 方案不行，面试要你手写。
+            </p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <pre><code>function deepClone(value, cache = new WeakMap()) {
+  if (value === null || typeof value !== 'object') return value;
+  if (cache.has(value)) return cache.get(value);
+
+  if (value instanceof Date) return new Date(value);
+  if (value instanceof RegExp) return new RegExp(value);
+
+  const result = Array.isArray(value) ? [] : {};
+  cache.set(value, result);
+
+  for (const key of Reflect.ownKeys(value)) {
+    result[key] = deepClone(value[key], cache);
+  }
+  return result;
+}</code></pre>
+              <p><strong>口述要点：</strong></p>
+              <ul>
+                <li>基本类型直接返回</li>
+                <li><code>WeakMap</code> 记录已拷贝对象，解决循环引用</li>
+                <li>特殊类型 Date/RegExp 单独处理（加分项）</li>
+                <li><code>Reflect.ownKeys</code> 包含 Symbol 键（加分项）</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+
+      <!-- ── 四、项目实战 ── -->
+      <section class="section">
+        <h2 class="section-title">四、项目实战</h2>
+
+        <article class="card" id="q9" data-qid="q9">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q9 · Object.is 和 === 何时不同？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>React 用 <code>Object.is</code> 比较 state 是否变化（类似 <code>===</code> 但有例外）——哪两种情况和 <code>===</code> 不一样？</p>
+          </div>
+          <pre><code data-runnable>console.log(NaN === NaN);
+console.log(Object.is(NaN, NaN));
+console.log(+0 === -0);
+console.log(Object.is(+0, -0));</code></pre>
+          <button type="button" class="btn" data-run>▶ 运行看输出</button>
+          <div class="run-output"></div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>输出：</strong></p>
+              <pre>false  true
+true   false</pre>
+              <p><code>Object.is</code> 与 <code>===</code> 仅两处不同：</p>
+              <ul>
+                <li><code>NaN</code> 与 <code>NaN</code> → <code>Object.is</code> 为 true</li>
+                <li><code>+0</code> 与 <code>-0</code> → <code>Object.is</code> 为 false</li>
+              </ul>
+              <p>React 18 批处理更新用 <code>Object.is</code> 判断 state 是否变化。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+
+        <article class="card" id="q10" data-qid="q10">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q10 · 项目里什么时候必须深拷贝？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>下面哪些需要深拷贝？哪些浅拷贝 / 不可变更新就够？</p>
+            <ul>
+              <li>A. 复制接口 JSON 做表单草稿（纯数据，无嵌套改共享风险时已展平）</li>
+              <li>B. 默认配置 <code>config.theme.colors</code> 给用户自定义主题</li>
+              <li>C. React <code>setState({ ...state, count: 1 })</code> 只改顶层 count</li>
+              <li>D. 撤销/重做栈里存历史 state 快照</li>
+            </ul>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead>
+                  <tr><th>场景</th><th>建议</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>A 扁平 JSON</td>
+                    <td>浅拷贝或 structuredClone 均可</td>
+                  </tr>
+                  <tr>
+                    <td>B 嵌套配置</td>
+                    <td><strong>深拷贝</strong>，否则改 colors 污染默认配置</td>
+                  </tr>
+                  <tr>
+                    <td>C 只改顶层</td>
+                    <td>浅拷贝 + 替换变更字段即可（React 惯用法）</td>
+                  </tr>
+                  <tr>
+                    <td>D 历史快照</td>
+                    <td><strong>深拷贝</strong> 或不可变数据结构（Immer），否则撤销互相污染</td>
+                  </tr>
+                </tbody>
+              </table>
+              <p><strong>原则：</strong>有没有<strong>嵌套共享引用</strong>且会<strong>独立修改</strong>？有 → 深拷贝或按层 immutable 更新。</p>
+              <p>编译期类型安全见 <a href="typescript.html">TypeScript 专题</a>；运行时结构复制是本专题重点。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label
+              ><input type="checkbox" class="mastered-check" /> 已掌握</label
+            >
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>

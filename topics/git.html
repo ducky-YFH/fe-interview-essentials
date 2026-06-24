@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Git 协作 · FE Interview Essentials</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body data-topic="git">
+    <header class="site-header">
+      <div class="inner">
+        <a href="../index.html" class="logo">
+          <div class="logo-icon">📚</div>
+          <div>
+            <div class="logo-text">FE Interview Essentials</div>
+            <div class="logo-sub">前端面试复习</div>
+          </div>
+        </a>
+        <div class="header-actions">
+          <button class="btn" id="btn-test" type="button">📝 自测模式</button>
+          <button class="btn btn-primary" id="btn-review" type="button">
+            📖 复习模式
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="page-header">
+        <h1>🌿 Git 协作</h1>
+        <p class="subtitle">含实战场景 · 6 题 · 精练 5 项 · 与 <a href="engineering.html">工程化</a> 配套</p>
+      </div>
+
+      <aside class="quick-path">
+        <h2>⏱ 精练路径（约 20 分钟）</h2>
+        <p class="time">时间紧只练带 ⭐ 的题</p>
+        <ol>
+          <li><a href="#q1">Q1</a> merge vs rebase</li>
+          <li><a href="#q2">Q2</a> 冲突怎么解</li>
+          <li><a href="#q3">Q3</a> 分支策略</li>
+          <li><a href="#q4">Q4</a> cherry-pick / stash</li>
+          <li><a href="#q5">Q5</a> reset vs revert</li>
+        </ol>
+      </aside>
+
+      <section class="section">
+        <h2 class="section-title">Git 协作</h2>
+
+        <article class="card" id="q1" data-qid="q1">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q1 · merge 和 rebase 区别？团队里怎么选？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>feature 分支开发完合并进 develop——用 merge 还是 rebase？各有什么坑？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead><tr><th></th><th>merge</th><th>rebase</th></tr></thead>
+                <tbody>
+                  <tr><td>历史</td><td>保留分叉 + merge commit</td><td>线性，像一直在最新 main 上开发</td></tr>
+                  <tr><td>冲突</td><td>合并时解决一次</td><td>可能多次 pick 时解决</td></tr>
+                  <tr><td>风险</td><td>历史杂乱</td><td><strong>勿 rebase 已推送公共分支</strong></td></tr>
+                </tbody>
+              </table>
+              <p><strong>团队常见：</strong>PR 进 main 用 squash merge；本地同步 main 用 <code>rebase origin/main</code>；已发布 release 分支只 merge。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q2" data-qid="q2">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q2 · 合并冲突怎么解决？<<<<<<< 是什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>你和同事改了同一个 Vue 组件的同一行，pull 后冲突——标准处理步骤？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ol>
+                <li><code>git pull</code> 或 merge/rebase 触发冲突</li>
+                <li>打开文件，找 <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> / <code>=======</code> / <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> 标记</li>
+                <li>人工保留正确代码，删除标记</li>
+                <li><code>git add</code> 标记已解决</li>
+                <li><code>git commit</code>（merge）或 <code>git rebase --continue</code></li>
+              </ol>
+              <p><strong>工具：</strong>VS Code 三路合并、<code>git mergetool</code>；复杂冲突先和同事沟通意图。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q3" data-qid="q3">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q3 · Git Flow / Trunk Based 你用过哪种？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>Monorepo 多端并行开发，hotfix 怎么进生产？feature 分支从哪切？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>Git Flow（传统）：</strong></p>
+              <ul>
+                <li><code>main</code> 生产 · <code>develop</code> 集成</li>
+                <li><code>feature/*</code> 从 develop 切，合回 develop</li>
+                <li><code>release/*</code> 发版 · <code>hotfix/*</code> 从 main 切合双分支</li>
+              </ul>
+              <p><strong>Trunk Based（敏捷）：</strong></p>
+              <ul>
+                <li>短生命 feature 分支或直接 main + Feature Flag</li>
+                <li>CI 门禁，小步快跑</li>
+              </ul>
+              <p><strong>面试答法：</strong>说清你们实际用的 + 为什么（团队规模、发版频率）。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q4" data-qid="q4">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q4 · cherry-pick 和 stash 分别什么时候用？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>A. 生产 bug 修复 commit 要同步到 release 分支<br />B. 开发到一半要切分支修 hotfix</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <p><strong>cherry-pick：</strong>把指定 commit 应用到当前分支 → 场景 A。</p>
+              <pre><code>git cherry-pick &lt;commit-hash&gt;</code></pre>
+              <p><strong>stash：</strong>暂存工作区未提交改动，切分支后再 pop → 场景 B。</p>
+              <pre><code>git stash push -m "wip upload"
+git checkout hotfix/xxx
+# 修完回来
+git checkout feature/xxx
+git stash pop</code></pre>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q5" data-qid="q5">
+          <div class="card-header">
+            <span class="badge badge-must">必练</span>
+            <h3>Q5 · git reset 和 git revert 区别？误提交怎么办？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>commit 已 push 到远程，发现引入了 bug——该 revert 还是 reset --hard？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <table>
+                <thead><tr><th>命令</th><th>效果</th><th>适用</th></tr></thead>
+                <tbody>
+                  <tr><td>reset --soft/mixed/hard</td><td>移动 HEAD，改写历史</td><td><strong>仅本地</strong>未 push</td></tr>
+                  <tr><td>revert</td><td>新 commit 反向抵消</td><td><strong>已 push 公共分支</strong></td></tr>
+                </tbody>
+              </table>
+              <p><strong>已 push：</strong>用 <code>git revert &lt;hash&gt;</code>，勿 force push main。</p>
+              <p><strong>本地最后一次 commit 写错：</strong><code>git commit --amend</code> 或 <code>reset --soft HEAD~1</code>。</p>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+
+        <article class="card" id="q6" data-qid="q6">
+          <div class="card-header">
+            <span class="badge badge-optional">选练</span>
+            <h3>Q6 · .gitignore、子模块、Code Review 注意什么？</h3>
+          </div>
+          <div class="scenario">
+            <div class="scenario-label">📌 场景</div>
+            <p>新人把 <code>node_modules</code> 和 <code>.env.local</code> 提交了——怎么防？Review 看什么？</p>
+          </div>
+          <details class="answer">
+            <summary>查看答案</summary>
+            <div class="answer-body">
+              <ul>
+                <li><code>.gitignore</code> 覆盖 node_modules、dist、.env*.local</li>
+                <li>已提交敏感文件：<code>git rm --cached</code> + 轮换密钥</li>
+                <li>Review：逻辑正确性、边界、类型、性能、安全（XSS/权限）</li>
+                <li>commit message 规范：feat/fix/refactor + 简述</li>
+                <li>子模块：Monorepo 更常用 pnpm workspace 而非 git submodule</li>
+              </ul>
+            </div>
+          </details>
+          <div class="card-footer">
+            <label><input type="checkbox" class="mastered-check" /> 已掌握</label>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="../assets/js/app.js"></script>
+  </body>
+</html>
