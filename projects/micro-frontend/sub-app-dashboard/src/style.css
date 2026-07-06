@@ -1,0 +1,60 @@
+/* ============================================================
+   子应用 dashboard 样式（独立端口 7101）
+   被主应用加载时，这些样式会随 JS import 注入到主页面
+   ============================================================ */
+
+.subapp {
+  color: #0f172a;
+  font-family: "Inter", "PingFang SC", sans-serif;
+}
+
+.subapp-dashboard header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.subapp-dashboard h2 {
+  margin: 0;
+}
+
+.tag {
+  font-size: 12px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.card p {
+  margin: 8px 0 0;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.note {
+  margin-top: 16px;
+  color: #475569;
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}

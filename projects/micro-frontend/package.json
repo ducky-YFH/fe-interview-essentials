@@ -1,0 +1,22 @@
+{
+  "name": "micro-frontend-lab",
+  "private": true,
+  "version": "1.0.0",
+  "description": "微前端实现原理演示 — 独立小项目",
+  "workspaces": [
+    "micro-runtime",
+    "main-app",
+    "sub-app-dashboard",
+    "sub-app-settings"
+  ],
+  "scripts": {
+    "dev": "concurrently -n runtime,main,dash,settings -c blue,green,yellow,magenta \"npm run dev -w micro-runtime\" \"npm run dev -w main-app\" \"npm run dev -w sub-app-dashboard\" \"npm run dev -w sub-app-settings\"",
+    "build": "npm run build -w micro-runtime && npm run build -w sub-app-dashboard && npm run build -w sub-app-settings && npm run build -w main-app",
+    "dev:main": "npm run dev -w main-app",
+    "dev:dashboard": "npm run dev -w sub-app-dashboard",
+    "dev:settings": "npm run dev -w sub-app-settings"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
